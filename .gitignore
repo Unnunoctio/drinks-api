@@ -1,3 +1,9 @@
+# other
+deprecated
+
+# pnpm
+.pnpm-lock.yaml
+
 # dev
 .yarn/
 !.yarn/releases
