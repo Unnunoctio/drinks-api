@@ -73,6 +73,11 @@ export const beers = sqliteTable('beers', {
     servingTempMaxC: integer('serving_temp_max_c'),
 })
 
+// ==================== BEER HASH ====================
+export const uniqueBeerIdentities = sqliteTable('unique_beer_identities', {
+    hash: text('hash').primaryKey()
+})
+
 // ==================== WINE TYPES ====================
 export const wineTypes = sqliteTable('wine_types', {
     id: text('id').primaryKey(),
