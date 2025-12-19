@@ -1,4 +1,4 @@
-import { rateLimiter } from '@/middleware/rateLimiter'
+import { rateLimiter } from '@/middlewares/rateLimiter'
 import { D1Database, KVNamespace } from '@cloudflare/workers-types'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
