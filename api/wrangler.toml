@@ -1,0 +1,27 @@
+name = "drinks-api"
+main = "src/index.ts"
+compatibility_date = "2025-12-13"
+
+# BASE DE DATOS D1
+[[d1_databases]]
+binding = "DB"
+database_name = "drinks-api-db"
+database_id = "xxxx"
+
+# KV for rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "xxxx"
+
+[observability]
+[observability.logs]
+enabled = true
+persist = true
+head_sampling_rate = 0.05
+
+[observability.traces]
+enabled = false
+
+# ENV
+[vars]
+# ADMIN_API_KEY configure with: wrangler secret put ADMIN_API_KEY

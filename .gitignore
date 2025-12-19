@@ -1,8 +1,9 @@
 # other
 deprecated
+.wrangler
 
 # pnpm
-.pnpm-lock.yaml
+pnpm-lock.yaml
 
 # dev
 .yarn/
