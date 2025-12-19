@@ -13,7 +13,54 @@ type Bindings = {
 
 const route = new Hono<{ Bindings: Bindings }>()
 
-route.post('/catalog', async (c) => {
+route.get('/export-catalog', async (c) => {
+    const db = drizzle(c.env.DB, { schema })
+
+    try {
+        // TODO: Export Countries, Origins, Brands, Categories, Packaging
+        const catalogData = [
+            {
+                sheet: 'Countries',
+                data: await db.select().from(schema.countries).orderBy(schema.countries.name)
+            },
+            {
+                sheet: 'Origins',
+                data: await db.select().from(schema.origins).orderBy(schema.origins.countryId, schema.origins.region)
+            },
+            {
+                sheet: 'Brands',
+                data: await db.select().from(schema.brands).orderBy(schema.brands.name)
+            },
+            {
+                sheet: 'Categories',
+                data: await db.select().from(schema.categories).orderBy(schema.categories.name)
+            },
+            {
+                sheet: 'Packaging',
+                data: await db.select().from(schema.packaging).orderBy(schema.packaging.name)
+            }
+        ]
+
+        const workbook = XLSX.utils.book_new()
+
+        for (const d of catalogData) {
+            const worksheet = XLSX.utils.json_to_sheet(d.data)
+            XLSX.utils.book_append_sheet(workbook, worksheet, d.sheet)
+        }
+
+        const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
+
+        c.res.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        c.res.headers.set('Content-Disposition', 'attachment; filename=CATALOG.xlsx')
+
+        return c.body(buffer)
+    } catch (error: any) {
+        console.error('Unexpected server error:', error)
+        return c.json({ error: 'Internal server error' }, 500)
+    }
+})
+
+route.post('/import-catalog', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
     try {
