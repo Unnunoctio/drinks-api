@@ -1,4 +1,5 @@
 import * as schema from '@/db/schema'
+import { generateSlug } from '@/utils/generateSlug'
 import { brandSchema, categorySchema, countrySchema, originSchema, packagingSchema } from '@/validations/catalogValidations'
 import { D1Database } from "@cloudflare/workers-types"
 import { DrizzleQueryError, sql } from "drizzle-orm"
@@ -13,6 +14,8 @@ type Bindings = {
 const route = new Hono<{ Bindings: Bindings }>()
 
 route.post('/catalog', async (c) => {
+    const db = drizzle(c.env.DB, { schema })
+
     try {
         const body = await c.req.parseBody()
         const file = body.file
@@ -21,7 +24,6 @@ route.post('/catalog', async (c) => {
         const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
         if (['.xlsx', '.xls'].includes(extension) === false) return c.json({ error: 'File must be an Excel file' }, 400)
 
-        const db = drizzle(c.env.DB, { schema })
         const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, raw: false })
         const sheetNames = workbook.SheetNames
 
@@ -30,12 +32,14 @@ route.post('/catalog', async (c) => {
         const config_sheets = [
             {
                 sheet: 'Countries',
+                getSlug: (data: any) => generateSlug(data.isoCode),
                 schemaValidation: countrySchema,
                 dbTable: schema.countries,
                 set: { name: sql`excluded.name`, isoCode: sql`excluded.iso_code` }
             },
             {
                 sheet: 'Origins',
+                getSlug: (data: any) => generateSlug(`${data.countryId}-${(data.region === '' || data.region === undefined || data.region === null) ? 'none' : data.region}`),
                 schemaValidation: originSchema,
                 dbTable: schema.origins,
                 set: { countryId: sql`excluded.country_id`, region: sql`excluded.region` },
@@ -50,6 +54,7 @@ route.post('/catalog', async (c) => {
             },
             {
                 sheet: 'Brands',
+                getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: brandSchema,
                 dbTable: schema.brands,
                 set: { name: sql`excluded.name`, originId: sql`excluded.origin_id`, website: sql`excluded.website` },
@@ -64,12 +69,14 @@ route.post('/catalog', async (c) => {
             },
             {
                 sheet: 'Categories',
+                getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: categorySchema,
                 dbTable: schema.categories,
                 set: { name: sql`excluded.name` }
             },
             {
                 sheet: 'Packaging',
+                getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: packagingSchema,
                 dbTable: schema.packaging,
                 set: { name: sql`excluded.name` }
@@ -127,7 +134,13 @@ route.post('/catalog', async (c) => {
                     if (hasReferenceError) continue
                 }
 
-                validRows.push(validation.data)
+                // Generate slug id if not provided
+                let dataId = data.id
+                if (dataId === undefined || dataId === null || dataId === '') {
+                    dataId = config.getSlug(validation.data)
+                }
+
+                validRows.push({ id: dataId, ...validation.data })
             }
 
             if (validRows.length === 0) continue
@@ -158,6 +171,8 @@ route.post('/catalog', async (c) => {
 })
 
 route.post('/countries', async (c) => {
+    const db = drizzle(c.env.DB, { schema })
+
      try {
         const body = await c.req.json()
 
@@ -166,8 +181,10 @@ route.post('/countries', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const db = drizzle(c.env.DB, { schema })
-        const [country] = await db.insert(schema.countries).values(validation.data).returning();
+        const [country] = await db.insert(schema.countries).values({
+            id: generateSlug(validation.data.isoCode),
+            ...validation.data,
+        }).returning();
 
         return c.json({ data: country }, 201)
     } catch (error: any) {
@@ -185,6 +202,8 @@ route.post('/countries', async (c) => {
 })
 
 route.post('/origins', async(c) => {
+    const db = drizzle(c.env.DB, { schema })
+
     try {
         const body = await c.req.json()
 
@@ -193,8 +212,10 @@ route.post('/origins', async(c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const db = drizzle(c.env.DB, { schema })
-        const [origin] = await db.insert(schema.origins).values(validation.data).returning();
+        const [origin] = await db.insert(schema.origins).values({
+            id: generateSlug(`${body.countryId}-${(body.region === '' || body.region === undefined || body.region === null) ? 'none' : body.region}`),
+            ...validation.data,
+        }).returning();
 
         return c.json({ data: origin }, 201)
     } catch (error: any) {
@@ -215,6 +236,8 @@ route.post('/origins', async(c) => {
 })
 
 route.post('/brands', async(c) => {
+    const db = drizzle(c.env.DB, { schema })
+
     try {
         const body = await c.req.json()
 
@@ -223,8 +246,10 @@ route.post('/brands', async(c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const db = drizzle(c.env.DB, { schema })
-        const [brand] = await db.insert(schema.brands).values(validation.data).returning();
+        const [brand] = await db.insert(schema.brands).values({
+            id: generateSlug(body.name),
+            ...validation.data,
+        }).returning();
 
         return c.json({ data: brand }, 201)
     } catch (error: any) {
@@ -245,6 +270,8 @@ route.post('/brands', async(c) => {
 })
 
 route.post('/categories', async (c) => {
+    const db = drizzle(c.env.DB, { schema })
+
     try {
         const body = await c.req.json()
 
@@ -253,8 +280,10 @@ route.post('/categories', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const db = drizzle(c.env.DB, { schema })
-        const [category] = await db.insert(schema.categories).values(validation.data).returning();
+        const [category] = await db.insert(schema.categories).values({
+            id: generateSlug(body.name),
+            ...validation.data,
+        }).returning();
 
         return c.json({ data: category }, 201)
     } catch (error: any) {
@@ -272,6 +301,8 @@ route.post('/categories', async (c) => {
 })
 
 route.post('/packaging', async (c) => {
+    const db = drizzle(c.env.DB, { schema })
+
     try {
         const body = await c.req.json()
 
@@ -280,8 +311,10 @@ route.post('/packaging', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const db = drizzle(c.env.DB, { schema })
-        const [packaging] = await db.insert(schema.packaging).values(validation.data).returning();
+        const [packaging] = await db.insert(schema.packaging).values({
+            id: generateSlug(body.name),
+            ...validation.data,
+        }).returning();
 
         return c.json({ data: packaging }, 201)
     } catch (error: any) {
