@@ -1,5 +1,6 @@
 import * as schema from '@/db/schema'
 import { generateSlug } from '@/utils/generateSlug'
+import { beerStyleSchema } from '@/validations/beerValidations'
 import { brandSchema, categorySchema, countrySchema, originSchema, packagingSchema } from '@/validations/catalogValidations'
 import { D1Database } from "@cloudflare/workers-types"
 import { DrizzleQueryError, sql } from "drizzle-orm"
@@ -17,7 +18,7 @@ route.get('/export-catalog', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
     try {
-        // TODO: Export Countries, Origins, Brands, Categories, Packaging
+        // TODO: Export Countries, Origins, Brands, Categories, Packaging, Beer-Styles
         const catalogData = [
             {
                 sheet: 'Countries',
@@ -38,6 +39,10 @@ route.get('/export-catalog', async (c) => {
             {
                 sheet: 'Packaging',
                 data: await db.select().from(schema.packaging).orderBy(schema.packaging.name)
+            },
+            {
+                sheet: 'Beer-Styles',
+                data: await db.select().from(schema.beerStyles).orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name)
             }
         ]
 
@@ -127,6 +132,27 @@ route.post('/import-catalog', async (c) => {
                 schemaValidation: packagingSchema,
                 dbTable: schema.packaging,
                 set: { name: sql`excluded.name` }
+            },
+            {
+                sheet: 'Beer-Styles',
+                getSlug: (data: any) => generateSlug(data.name),
+                schemaValidation: beerStyleSchema,
+                dbTable: schema.beerStyles,
+                set: { name: sql`excluded.name`, description: sql`excluded.description`, originId: sql`excluded.origin_id`, parentStyleId: sql`excluded.parent_style_id` },
+                references: [
+                    {
+                        field: 'originId',
+                        idFieldDB: schema.origins.id,
+                        tableDB: schema.origins,
+                        values: <{ id: string }[]>[]
+                    },
+                    {
+                        field: 'parentStyleId',
+                        idFieldDB: schema.beerStyles.id,
+                        tableDB: schema.beerStyles,
+                        values: <{ id: string }[]>[]
+                    }
+                ]
             }
         ]
 
@@ -146,7 +172,6 @@ route.post('/import-catalog', async (c) => {
             const sheetData = XLSX.utils.sheet_to_json(worksheet) as any[]
             
             const validRows: any[] = []
-            // for (const data of sheetData) {
             for (let i = 0; i < sheetData.length; i++) {
                 const data = sheetData[i]
                 const rowNumber = i + 2 // Skip header
