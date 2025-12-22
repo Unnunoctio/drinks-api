@@ -1,0 +1,19 @@
+{
+  "name": "frontend",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "7.2.4",
+    "@tailwindcss/vite": "4.1.18",
+    "astro": "5.16.6",
+    "svelte": "5.46.0",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3"
+  }
+}

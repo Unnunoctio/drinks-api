@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+    --font-satoshi: "Satoshi", ui-sans-serif, system-ui;
+    --breakpoint-xs: 480px;
+    --color-foreground: #222222;
+    --color-foreground-code: #f0f0f0;
+    --max-width-content: 1080px;
+}
