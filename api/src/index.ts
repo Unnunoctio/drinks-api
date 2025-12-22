@@ -43,14 +43,14 @@ app.get('/', (c) => {
         message: 'API is running',
         version: '1.0.0',
         endpoints: {
-            public: '/v1/public',
+            public: '/v1',
             admin: '/v1/admin'
         }
     })
 })
 
 app.route('v1/admin', adminRoutes)
-app.route('v1/public', publicRoutes)
+app.route('v1', publicRoutes)
 
 app.notFound((c) => {
     return c.json({
