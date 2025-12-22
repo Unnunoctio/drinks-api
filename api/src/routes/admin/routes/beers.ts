@@ -44,7 +44,7 @@ route.get('/export-beers', async (c) => {
             const brandBeers = beersByBrand[brandId]
             if (brandBeers === undefined) return
 
-            const worksheet = XLSX.utils.json_to_sheet(brandBeers)
+            const worksheet = XLSX.utils.json_to_sheet(brandBeers.sort((a, b) => a.name.localeCompare(b.name)))
             XLSX.utils.book_append_sheet(workbook, worksheet, brandId)
         })
 
