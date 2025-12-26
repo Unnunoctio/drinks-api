@@ -4,10 +4,14 @@
     export let urlPath: string;
 
     let urlActive = "beers";
-    let urlPetition = `${urlPath}${urlActive}`;
+    let urlPetition = `${urlPath}/${urlActive}`;
 
     function submit() {
-        urlPetition = `${urlPath}${urlActive}`;
+        if (urlActive === "") {
+            urlPetition = `${urlPath}`;
+        } else {
+            urlPetition = `${urlPath}/${urlActive}`;
+        }
     }
 
     function changeInput(value: string) {
@@ -18,7 +22,7 @@
 
 <form on:submit|preventDefault={submit} class="flex flex-col sm:flex-row gap-2 sm:gap-0">
     <section class="flex flex-1 text-[14px] xs:text-base items-center">
-        <label for="url-input" class="p-2 bg-slate-200 rounded-l-lg border border-slate-200">{urlPath}</label>
+        <label for="url-input" class="p-2 bg-slate-200 rounded-l-lg border border-slate-200">{urlPath}/</label>
         <input
             bind:value={urlActive}
             id="url-input"
