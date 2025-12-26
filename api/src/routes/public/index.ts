@@ -8,9 +8,21 @@ const router = new Hono()
 router.get('/', (c) => {
     return c.json({
         enpoints: {
-            beers: '/v1/public/beers'
+            beers: {
+                beer: '/beers/:id',
+                beers: '/beers',
+                beerStyle: '/beer-styles/:id',
+                beerStyles: '/beer-styles',
+            },
+            catalogs: {
+                countries: '/countries',
+                origins: '/origins',
+                brands: '/brands',
+                categories: '/categories',
+                packaging: '/packaging'
+            }
         }
-    })
+    }, 200)
 })
 
 // Spirits
