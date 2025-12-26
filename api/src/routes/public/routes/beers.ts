@@ -4,6 +4,7 @@ import { paginationSchema } from '@/validations/paginationValidations'
 import { D1Database } from '@cloudflare/workers-types'
 import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
+import { alias } from 'drizzle-orm/sqlite-core'
 import { Hono } from 'hono'
 
 type Bindings = {
@@ -64,9 +65,9 @@ route.get('/beers', async (c) => {
 
 route.get('/beers/:id', async (c) => {
     try {
-        const db = drizzle(c.env.DB, { schema })
-        
         const id = c.req.param('id')
+
+        const db = drizzle(c.env.DB, { schema })
         const beers = await db
         .select({
             id: schema.beers.drinkId,
@@ -105,6 +106,75 @@ route.get('/beers/:id', async (c) => {
         }
 
         return c.json({ data: beers[0] }, 200)
+    } catch (error) {
+        return c.json({ error: 'Internal server error' }, 500)
+    }
+})
+
+route.get('/beer-styles', async (c) => {
+    try {
+        const query = parseQuery(c.req.query())
+        const pagination = paginationSchema.safeParse(query)
+        if (pagination.error !== undefined) return c.json({ error: JSON.parse(pagination.error.message) }, 400)
+
+        const { page, limit } = pagination.data
+        const offset = (page - 1) * limit
+
+        const db = drizzle(c.env.DB, { schema })
+        const parentStylesAlias = alias(schema.beerStyles, 'parentStyle')
+        const beerStyles = await db
+            .select({
+                id: schema.beerStyles.id,
+                name: schema.beerStyles.name,
+                description: schema.beerStyles.description,
+                country: schema.countries.name,
+                region: schema.origins.region,
+                parentStyle: parentStylesAlias.name
+            })
+            .from(schema.beerStyles)
+            .innerJoin(schema.origins, eq(schema.beerStyles.originId, schema.origins.id))
+            .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
+            .leftJoin(parentStylesAlias, eq(schema.beerStyles.parentStyleId, parentStylesAlias.id))
+            .orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name);
+
+        return c.json({
+            pagination: { page, limit, totalPages: Math.ceil(beerStyles.length / limit) },
+            data: beerStyles.slice(offset, offset + limit)
+        }, 200)
+    } catch (error) {
+        return c.json({ error: 'Internal server error' }, 500)
+    }
+})
+
+route.get('/beer-styles/:id', async (c) => {
+    try {
+        const id = c.req.param('id')
+
+        const db = drizzle(c.env.DB, { schema })
+        const parentStylesAlias = alias(schema.beerStyles, 'parentStyle')
+        const beerStyles = await db
+            .select({
+                id: schema.beerStyles.id,
+                name: schema.beerStyles.name,
+                description: schema.beerStyles.description,
+                country: schema.countries.name,
+                region: schema.origins.region,
+                parentStyle: parentStylesAlias.name
+            })
+            .from(schema.beerStyles)
+            .innerJoin(schema.origins, eq(schema.beerStyles.originId, schema.origins.id))
+            .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
+            .leftJoin(parentStylesAlias, eq(schema.beerStyles.parentStyleId, parentStylesAlias.id))
+            .where(eq(schema.beerStyles.id, id))
+            .limit(1);
+
+        if (beerStyles.length === 0) {
+            return c.json({ error: 'Beer Style not found' }, 404)
+        }
+
+        return c.json({
+            data: beerStyles[0]
+        }, 200)
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
