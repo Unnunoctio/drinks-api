@@ -2,6 +2,7 @@
 
 @theme {
     --font-satoshi: "Satoshi", ui-sans-serif, system-ui;
+    --font-expletus-sans: "Expletus Sans", ui-sans-serif, system-ui;
     --breakpoint-xs: 480px;
     --color-foreground: #222222;
     --color-foreground-code: #f0f0f0;
