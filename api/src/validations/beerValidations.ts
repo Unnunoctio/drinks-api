@@ -11,7 +11,7 @@ export const beerSchema = z.object({
     volumeCc: z.number().min(0, { message: 'Volume must be greater than 0' }),
     
     beerStyleId: z.string().min(1, { message: 'Beer style ID is required' }),
-    ibu: z.number().min(0, { message: 'IBU must be greater than 0' }).max(100, { message: 'IBU must be less than 100' }),
+    ibu: z.number().min(0, { message: 'IBU must be greater than 0' }).max(100, { message: 'IBU must be less than 100' }).nullable().optional(),
     servingTempMinC: z.number().nullable().optional(),
     servingTempMaxC: z.number().nullable().optional(),
 })
