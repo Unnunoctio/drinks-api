@@ -1,0 +1,24 @@
+---
+export interface Props {
+    method: string;
+    href: string | null;
+    path: string;
+    description: string;
+}
+
+const { method, href, path, description } = Astro.props;
+---
+
+<li class="flex gap-8 max-w-140 justify-between">
+    <div class="flex gap-6">
+        <span>{method}</span>
+        {
+            href === null
+            ? <span>{path}</span>
+            : <a href={href} class="underline decoration-violet-600 underline-off-set-4 hover:text-violet-700">{path}</a>
+        }
+    </div>
+    <div class="w-55">
+        <p>{description}</p>
+    </div>
+</li>

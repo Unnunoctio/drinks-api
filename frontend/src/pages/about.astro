@@ -1,5 +1,8 @@
 ---
+import AboutRoute from '@/components/AboutRoute.astro';
 import Layout from '@/layouts/Layout.astro';
+
+const urlPath = "https://drinks-api.unnunoctio-dev.workers.dev/v1";
 ---
 
 <Layout title="About | Drinks API">
@@ -7,7 +10,7 @@ import Layout from '@/layouts/Layout.astro';
         <h1 class="py-3 sm:py-6 font-medium text-3xl sm:text-4xl">Acerca de</h1>
         
         <section class="px-4 mt-3 max-w-225">
-            <h2 class="text-xl sm:text-2xl">¿Qué es esto?</h2>
+            <h2 class="text-xl sm:text-2xl font-medium">¿Qué es esto?</h2>
             <p class="pt-4 text-pretty">
                 Este sitio web proporciona una interfaz de API REST de objetos detallados a 
                 partir de miles de datos relacionados con bebidas alcohólicas. Usando este 
@@ -17,7 +20,7 @@ import Layout from '@/layouts/Layout.astro';
         </section>
 
         <section class="mt-8 sm:mt-12 px-4 max-w-225">
-            <h2 class="text-xl sm:text-2xl">¿Qué es una API?</h2>
+            <h2 class="text-xl sm:text-2xl font-medium">¿Qué es una API?</h2>
             <p class="pt-4 text-pretty">
                 Una API (Application Programming Interface) permite a los desarrolladores 
                 acceder a las funcionalidades de una aplicación, servicio o plataforma sin 
@@ -26,49 +29,34 @@ import Layout from '@/layouts/Layout.astro';
             </p>
         </section>
 
-        <!-- <section class="mt-8 sm:mt-12 px-4 max-w-225">
-            <h2 class="text-xl sm:text-2xl">Rutas</h2>
+        <section class="mt-8 sm:mt-12 px-4 max-w-225">
+            <h2 class="text-xl sm:text-2xl font-medium">Rutas</h2>
             <p class="pt-4 text-pretty">
-                Estos son todos los métodos HTTP admitidos. Puedes usar http o https para tus solicitudes.
+                Estos son todos los métodos HTTP admitidos.
             </p>
-            <ul class="flex flex-col gap-y-1 pl-4 pt-6">
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <a href={`${urlPath}/brands`} class="text-blue-500 hover:underline">/brands</a>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <span>/brands/[brand]</span>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <a href={`${urlPath}/categories`} class="text-blue-500 hover:underline">/categories</a>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <span>/categories/[category]</span>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <span>/categories/[category]/[sub-category]</span>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <a href={`${urlPath}/origins`} class="text-blue-500 hover:underline">/origins</a>
-                </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <span>/origins/[country]</span>
-                    </li>
-                <li class="flex gap-8">
-                    <span>GET</span>
-                    <a href={`${urlPath}/drinks?limit=100&page=1`} class="text-blue-500 hover:underline">/drinks?limit=100&page=1</a>
-                </li>
-            </ul>
-        </section> -->
+            <section class="pt-4">
+                <h3 class="text-lg sm:text-xl font-medium">Cervezas</h3>
+                <ul class="flex flex-col gap-y-1 pl-4 pt-1">
+                    <AboutRoute method="GET" href={`${urlPath}/beers`} path="/beers" description="# Listar todas las cervezas" />
+                    <AboutRoute method="GET" href={null} path="/beers/:id" description="# Obtener cerveza específica" />
+                    <AboutRoute method="GET" href={`${urlPath}/beer-styles`} path="/beer-styles" description="# Listar estilos de cerveza" />
+                    <AboutRoute method="GET" href={null} path="/beer-styles/:id" description="# Estilo específico" />
+                </ul>
+            </section>
+            <section class="pt-4">
+                <h3 class="text-lg sm:text-xl font-medium">Catálogo</h3>
+                <ul class="flex flex-col gap-y-1 pl-4 pt-1">
+                    <AboutRoute method="GET" href={`${urlPath}/countries`} path="/countries" description="# Países" />
+                    <AboutRoute method="GET" href={`${urlPath}/origins`} path="/origins" description="# Orígenes (país + región)" />
+                    <AboutRoute method="GET" href={`${urlPath}/brands`} path="/brands" description="# Marcas" />
+                    <AboutRoute method="GET" href={`${urlPath}/categories`} path="/categories" description="# Categorías" />
+                    <AboutRoute method="GET" href={`${urlPath}/packaging`} path="/packaging" description="# Tipos de envase" />
+                </ul>
+            </section>
+        </section>
 
         <section class="mt-8 sm:mt-12 px-4 max-w-225">
-            <h2 class="text-xl sm:text-2xl">¿Cuáles son las tecnologías que se utilizan?</h2>
+            <h2 class="text-xl sm:text-2xl font-medium">¿Cuáles son las tecnologías que se utilizan?</h2>
             <p class="pt-4 text-pretty">
                 El sistema está construido con tecnologías modernas y orientadas al rendimiento.  
                 Se utiliza 
@@ -96,7 +84,7 @@ import Layout from '@/layouts/Layout.astro';
 
         </section>
             <section class="mt-8 sm:mt-12 px-4 max-w-225">
-            <h2 class="text-xl sm:text-2xl">Repositorio del Proyecto</h2>
+            <h2 class="text-xl sm:text-2xl font-medium">Repositorio del Proyecto</h2>
             <ul class="flex flex-col gap-y-1 pt-6">
                 <li class="flex gap-8">
                     <a href="https://github.com/Unnunoctio/Drinks-API" aria-label="drinks-website-api" target="_blank" rel="noreferrer" class="font-medium underline decoration-violet-600 underline-off-set-4 hover:text-violet-700">Drinks API</a>
