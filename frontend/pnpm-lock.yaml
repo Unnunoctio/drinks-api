@@ -11,6 +11,9 @@ importers:
       '@astrojs/svelte':
         specifier: 7.2.4
         version: 7.2.4(@types/node@25.0.3)(astro@5.16.6(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2)(rollup@4.54.0)(typescript@5.9.3))(jiti@2.6.1)(lightningcss@1.30.2)(svelte@5.46.0)(typescript@5.9.3)
+      '@kaifronsdal/svelte-json-viewer':
+        specifier: 0.1.0
+        version: 0.1.0(svelte@5.46.0)
       '@tailwindcss/vite':
         specifier: 4.1.18
         version: 4.1.18(vite@6.4.1(@types/node@25.0.3)(jiti@2.6.1)(lightningcss@1.30.2))
@@ -386,6 +389,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@kaifronsdal/svelte-json-viewer@0.1.0':
+    resolution: {integrity: sha512-+1t6847Yh0aA6hnevxLsp1M7BEt36fUHhplOnLf9tBH0BtJz1D4eQiFwfnbhyBr61Wif9EFjgU58jEWRQuQXwQ==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
@@ -2062,6 +2070,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@kaifronsdal/svelte-json-viewer@0.1.0(svelte@5.46.0)':
+    dependencies:
+      svelte: 5.46.0
 
   '@oslojs/encoding@1.1.0': {}
 

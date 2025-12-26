@@ -34,7 +34,8 @@
 </form>
 
 <section class="mt-10">
-    <div class="p-4 h-150 overflow-auto bg-slate-600 text-slate-50 rounded-lg">
+    <div class="h-150 overflow-auto rounded-lg bg-[#24292e]">
         <ApiPetition url={urlPetition} />
     </div>
 </section>
+

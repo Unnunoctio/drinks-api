@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrojs/svelte": "7.2.4",
+    "@kaifronsdal/svelte-json-viewer": "0.1.0",
     "@tailwindcss/vite": "4.1.18",
     "astro": "5.16.6",
     "svelte": "5.46.0",
