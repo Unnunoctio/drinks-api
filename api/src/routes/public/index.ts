@@ -1,4 +1,5 @@
 import beerRoutes from '@/routes/public/routes/beers'
+import catalogRoutes from '@/routes/public/routes/catalogs'
 import { Hono } from 'hono'
 
 
@@ -12,10 +13,10 @@ router.get('/', (c) => {
     })
 })
 
-// Catalog
 // Spirits
 // Wines
 // Stats
 router.route('', beerRoutes)
+router.route('', catalogRoutes)
 
 export default router
