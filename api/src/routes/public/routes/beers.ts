@@ -1,4 +1,6 @@
 import * as schema from '@/db/schema'
+import { parseQuery } from '@/utils/parseQuery'
+import { paginationSchema } from '@/validations/paginationValidations'
 import { D1Database } from '@cloudflare/workers-types'
 import { eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
@@ -12,6 +14,13 @@ const route = new Hono<{ Bindings: Bindings }>()
 
 route.get('/beers', async (c) => {
     try {
+        const query = parseQuery(c.req.query())
+        const pagination = paginationSchema.safeParse(query)
+        if (pagination.error !== undefined) return c.json({ error: JSON.parse(pagination.error.message) }, 400)
+
+        const { page, limit } = pagination.data
+        const offset = (page - 1) * limit
+
         const db = drizzle(c.env.DB, { schema })
         const beers = await db
         .select({
@@ -45,8 +54,57 @@ route.get('/beers', async (c) => {
             );
 
         return c.json({
-            data: beers.sort((a, b) => a.name.localeCompare(b.name))
+            pagination: { page, limit, totalPages: Math.ceil(beers.length / limit) },
+            data: beers.sort((a, b) => a.name.localeCompare(b.name)).slice(offset, offset + limit)
         }, 200)
+    } catch (error) {
+        return c.json({ error: 'Internal server error' }, 500)
+    }
+})
+
+route.get('/beers/:id', async (c) => {
+    try {
+        const db = drizzle(c.env.DB, { schema })
+        
+        const id = c.req.param('id')
+        const beers = await db
+        .select({
+            id: schema.beers.drinkId,
+            name: schema.drinks.name,
+            brand: schema.brands.name,
+            abv: schema.drinks.alcoholByVolume,
+            packaging: schema.packaging.name,
+            volume: schema.drinkFormats.volumeCc,
+            style: schema.beerStyles.name,
+            ibu: schema.beers.ibu,
+            servingTempMinC: schema.beers.servingTempMinC,
+            servingTempMaxC: schema.beers.servingTempMaxC,
+            country: schema.countries.name,
+            region: schema.origins.region,
+        })
+            .from(schema.beers)
+            .innerJoin(schema.drinks, eq(schema.beers.drinkId, schema.drinks.id))
+            .innerJoin(schema.brands, eq(schema.drinks.brandId, schema.brands.id))
+            .innerJoin(schema.drinkFormats, eq(schema.drinks.id, schema.drinkFormats.drinkId))
+            .innerJoin(schema.packaging, eq(schema.drinkFormats.packagingId, schema.packaging.id))
+            .innerJoin(schema.beerStyles, eq(schema.beers.beerStyleId, schema.beerStyles.id))
+            // Origen efectivo del drink (prioriza drinks.origin_id)
+            .leftJoin(
+                schema.origins,
+                eq(schema.origins.id, sql`COALESCE(${schema.drinks.originId}, ${schema.brands.originId})`)
+            )
+            .leftJoin(
+                schema.countries,
+                eq(schema.origins.countryId, schema.countries.id)
+            )
+            .where(eq(schema.beers.drinkId, id))
+            .limit(1);
+        
+        if (beers.length === 0) {
+            return c.json({ error: 'Beer not found' }, 404)
+        }
+
+        return c.json({ data: beers[0] }, 200)
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
