@@ -219,10 +219,14 @@ route.post('/import-catalog', async (c) => {
             
             // Masive insert or update if only rows are valid
             try {
-                await db.insert(config.dbTable).values(validRows).onConflictDoUpdate({
-                    target: config.dbTable.id,
-                    set: config.set as any
-                })
+                const BATCH_SIZE = 20
+                for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
+                    const batch = validRows.slice(i, i + BATCH_SIZE)
+                    await db.insert(config.dbTable).values(batch).onConflictDoUpdate({
+                        target: config.dbTable.id,
+                        set: config.set as any
+                    })
+                }
             } catch (error: any) {
                 // Error dont have a cause
                 console.error(`Batch insert error for ${sheetName}:`, error)
