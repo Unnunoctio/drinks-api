@@ -38,13 +38,15 @@ route.get('/export-beers', async (c) => {
             .from(schema.beers)
             .innerJoin(schema.drinks, eq(schema.beers.drinkId, schema.drinks.id))
             .innerJoin(schema.drinkFormats, eq(schema.drinkFormats.drinkId, schema.drinks.id))
+            .orderBy(schema.drinks.brandId)
 
         const beersByBrand = Object.groupBy(beers, ({ brandId }) => brandId)
         Object.keys(beersByBrand).forEach(brandId => {
             const brandBeers = beersByBrand[brandId]
             if (brandBeers === undefined) return
 
-            const worksheet = XLSX.utils.json_to_sheet(brandBeers.sort((a, b) => a.name.localeCompare(b.name)))
+            // Sort by name and volume (ascending)
+            const worksheet = XLSX.utils.json_to_sheet(brandBeers.sort((a, b) => a.name.localeCompare(b.name) || a.volumeCc - b.volumeCc))
             XLSX.utils.book_append_sheet(workbook, worksheet, brandId)
         })
 
