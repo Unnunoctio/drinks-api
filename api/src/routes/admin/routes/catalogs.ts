@@ -5,6 +5,7 @@ import { brandSchema, categorySchema, countrySchema, originSchema, packagingSche
 import { D1Database } from "@cloudflare/workers-types"
 import { DrizzleQueryError, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
+import ExcelJS from 'exceljs'
 import { Hono } from "hono"
 import * as XLSX from 'xlsx'
 
@@ -22,38 +23,81 @@ route.get('/export-catalog', async (c) => {
         const catalogData = [
             {
                 sheet: 'Countries',
-                data: await db.select().from(schema.countries).orderBy(schema.countries.name)
+                data: await db.select().from(schema.countries).orderBy(schema.countries.name),
+                validations: []
             },
             {
                 sheet: 'Origins',
-                data: await db.select().from(schema.origins).orderBy(schema.origins.countryId, schema.origins.region)
+                data: await db.select().from(schema.origins).orderBy(schema.origins.countryId, schema.origins.region),
+                validations: [
+                    {
+                        column: 'B',
+                        formula: 'Countries!$A$2:$A$1000'
+                    }
+                ]
             },
             {
                 sheet: 'Brands',
-                data: await db.select().from(schema.brands).orderBy(schema.brands.name)
+                data: await db.select().from(schema.brands).orderBy(schema.brands.name),
+                validations: [
+                    {
+                        column: 'C',
+                        formula: 'Origins!$A$2:$A$1000'
+                    }
+                ]
             },
             {
                 sheet: 'Categories',
-                data: await db.select().from(schema.categories).orderBy(schema.categories.name)
+                data: await db.select().from(schema.categories).orderBy(schema.categories.name),
+                validations: []
             },
             {
                 sheet: 'Packaging',
-                data: await db.select().from(schema.packaging).orderBy(schema.packaging.name)
+                data: await db.select().from(schema.packaging).orderBy(schema.packaging.name),
+                validations: []
             },
             {
                 sheet: 'Beer-Styles',
-                data: await db.select().from(schema.beerStyles).orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name)
+                data: await db.select().from(schema.beerStyles).orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name),
+                validations: [
+                    {
+                        column: 'D',
+                        formula: 'Origins!$A$2:$A$1000'
+                    },
+                    {
+                        column: 'E',
+                        formula: '$A$2:$A$1000'
+                    }
+                ]
             }
         ]
 
-        const workbook = XLSX.utils.book_new()
+        const workbook = new ExcelJS.Workbook()
 
         for (const d of catalogData) {
-            const worksheet = XLSX.utils.json_to_sheet(d.data)
-            XLSX.utils.book_append_sheet(workbook, worksheet, d.sheet)
+            const worksheet = workbook.addWorksheet(d.sheet)
+
+            const columns = Object.keys(d.data[0]).map(key => ({
+                header: key,
+                key: key,
+                width: 20
+            }))
+            worksheet.columns = columns
+
+            d.data.forEach(row => worksheet.addRow(row))
+
+            for (const v of d.validations) {
+                for (let row = 2; row <= 1000; row++) {
+                    worksheet.getCell(`${v.column}${row}`).dataValidation = {
+                        type: 'list',
+                        allowBlank: true,
+                        formulae: [v.formula]
+                    }
+                }
+            }
         }
 
-        const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
+        const buffer = await workbook.xlsx.writeBuffer()
 
         c.res.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         c.res.headers.set('Content-Disposition', 'attachment; filename=CATALOG.xlsx')
@@ -159,7 +203,7 @@ route.post('/import-catalog', async (c) => {
         for (const sheetName of sheetNames) {
             const config = config_sheets.find(c => c.sheet === sheetName)
             if (!config) continue
-            
+
             // Get all values dynamically for references
             if (config.references) {
                 for (const reference of config.references) {
@@ -170,7 +214,7 @@ route.post('/import-catalog', async (c) => {
             // Load data from sheet
             const worksheet = workbook.Sheets[sheetName]
             const sheetData = XLSX.utils.sheet_to_json(worksheet) as any[]
-            
+
             const validRows: any[] = []
             for (let i = 0; i < sheetData.length; i++) {
                 const data = sheetData[i]
@@ -216,7 +260,7 @@ route.post('/import-catalog', async (c) => {
             }
 
             if (validRows.length === 0) continue
-            
+
             // Masive insert or update if only rows are valid
             try {
                 const BATCH_SIZE = 20
