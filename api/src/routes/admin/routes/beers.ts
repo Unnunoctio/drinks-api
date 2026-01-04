@@ -4,6 +4,7 @@ import { beerIdentityHash } from '@/utils/identityHashes'
 import { beerSchema, beerStyleSchema } from '@/validations/beerValidations'
 import { and, DrizzleQueryError, eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
+import ExcelJS from 'exceljs'
 import { Hono } from 'hono'
 import { v7 as uuidv7 } from 'uuid'
 import * as XLSX from 'xlsx'
@@ -18,7 +19,48 @@ route.get('/export-beers', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
     try {
-        const workbook = XLSX.utils.book_new()
+        const workbook = new ExcelJS.Workbook()
+
+        // TODO: Add external values
+        const externalValues = {
+            brands: await db.select({ id: schema.brands.id }).from(schema.brands).orderBy(schema.brands.id),
+            categories: await db.select({ id: schema.categories.id }).from(schema.categories).orderBy(schema.categories.id),
+            origins: await db.select({ id: schema.origins.id }).from(schema.origins).orderBy(schema.origins.id),
+            packaging: await db.select({ id: schema.packaging.id }).from(schema.packaging).orderBy(schema.packaging.id),
+            beerStyles: await db.select({ id: schema.beerStyles.id }).from(schema.beerStyles).orderBy(schema.beerStyles.id),
+        }
+
+        // Add external value to Values sheet
+        const valuesSheet = workbook.addWorksheet('VALUES')
+
+        // Configure columns for Values sheet
+        valuesSheet.columns = [
+            { header: 'brands', key: 'brands', width: 20 },
+            { header: 'categories', key: 'categories', width: 20 },
+            { header: 'origins', key: 'origins', width: 20 },
+            { header: 'packaging', key: 'packaging', width: 20 },
+            { header: 'beerStyles', key: 'beerStyles', width: 20 }
+        ]
+
+        // Find the maximum length to iterate
+        const maxLength = Math.max(
+            externalValues.brands.length,
+            externalValues.categories.length,
+            externalValues.origins.length,
+            externalValues.packaging.length,
+            externalValues.beerStyles.length
+        )
+
+        // Add rows to Values sheet
+        for (let i = 0; i < maxLength; i++) {
+            valuesSheet.addRow({
+                brands: externalValues.brands[i]?.id || '',
+                categories: externalValues.categories[i]?.id || '',
+                origins: externalValues.origins[i]?.id || '',
+                packaging: externalValues.packaging[i]?.id || '',
+                beerStyles: externalValues.beerStyles[i]?.id || ''
+            })
+        }
 
         // TODO: Export Beers by Brand
         const beers = await db.select({
@@ -45,14 +87,39 @@ route.get('/export-beers', async (c) => {
             const brandBeers = beersByBrand[brandId]
             if (brandBeers === undefined) return
 
+            const worksheet = workbook.addWorksheet(brandId)
+
+            const columns = Object.keys(brandBeers[0]).map(key => ({
+                header: key,
+                key: key,
+                width: 20
+            }))
+            worksheet.columns = columns
+
             // Sort by name and volume (ascending)
-            const worksheet = XLSX.utils.json_to_sheet(brandBeers.sort((a, b) => a.name.localeCompare(b.name) || a.volumeCc - b.volumeCc))
-            XLSX.utils.book_append_sheet(workbook, worksheet, brandId)
+            brandBeers.sort((a, b) => a.name.localeCompare(b.name) || a.volumeCc - b.volumeCc).forEach(row => worksheet.addRow(row))
+
+            // Add validations
+            function addValidation(column: string, formula: string) {
+                for (let row = 2; row <= 1000; row++) {
+                    worksheet.getCell(`${column}${row}`).dataValidation = {
+                        type: 'list',
+                        allowBlank: true,
+                        formulae: [formula]
+                    }
+                }
+            }
+
+            addValidation('C', 'VALUES!$A$2:$A$1000') // brands
+            addValidation('E', 'VALUES!$B$2:$B$1000') // categories
+            addValidation('F', 'VALUES!$C$2:$C$1000') // origins
+            addValidation('G', 'VALUES!$D$2:$D$1000') // packaging
+            addValidation('I', 'VALUES!$E$2:$E$1000') // beer-styles
         })
 
         // TODO: Download File
-        const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' })
-        
+        const buffer = await workbook.xlsx.writeBuffer()
+
         c.res.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         c.res.headers.set('Content-Disposition', 'attachment; filename=BEERS.xlsx')
 
@@ -70,7 +137,7 @@ route.post('/import-beers', async (c) => {
         const body = await c.req.parseBody()
         const file = body.file
         if (!file || !(file instanceof File)) return c.json({ error: 'File not provided' }, 400)
-        
+
         const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
         if (['.xlsx', '.xls'].includes(extension) === false) return c.json({ error: 'File must be an Excel file' }, 400)
 
@@ -176,7 +243,7 @@ route.post('/import-beers', async (c) => {
 
                     // Insert or update Hash
                     await db.insert(schema.uniqueBeerIdentities).values({ hash: beerHash }).onConflictDoNothing()
-                    
+
                     // Search for existing drink
                     let drinkId: string | null = null
                     const drinkExisting = await db.select({ id: schema.drinks.id })
@@ -212,7 +279,7 @@ route.post('/import-beers', async (c) => {
                                 originId: sql`excluded.origin_id`,
                             }
                         })
-                        
+
                         // update Beer
                         await db.insert(schema.beers).values({
                             drinkId: drinkId,
@@ -261,7 +328,7 @@ route.post('/import-beers', async (c) => {
                                 eq(schema.drinkFormats.volumeCc, data.volumeCc),
                             )
                         ).limit(1)
-                    
+
                     // Insert format if not exists
                     if (formatExisting.length === 0) {
                         await db.insert(schema.drinkFormats).values({
@@ -274,7 +341,7 @@ route.post('/import-beers', async (c) => {
                 } catch (error: any) {
                     // Error dont have a cause
                     console.error(`Batch insert error for ${sheetName}:`, error)
-    
+
                     errors.push({
                         sheet: sheetName,
                         row: 0,
@@ -428,6 +495,5 @@ route.post('/beer-styles', async (c) => {
         return c.json({ error: 'Internal server error' }, 500)
     }
 })
-
 
 export default route
