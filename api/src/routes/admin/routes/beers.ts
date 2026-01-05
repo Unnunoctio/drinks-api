@@ -180,6 +180,8 @@ route.post('/import-beers', async (c) => {
         })
 
         for (const sheetName of sheetNames) {
+            if (sheetName === "VALUES") continue
+
             const config = config_sheets.find(c => c.sheet === sheetName)
             if (!config) continue
 
