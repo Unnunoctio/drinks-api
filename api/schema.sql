@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS origins (
     id TEXT PRIMARY KEY,
     country_id TEXT NOT NULL,
     region TEXT,
-    
+
     FOREIGN KEY (country_id) REFERENCES countries(id)
     UNIQUE (country_id, region)
 );
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS wines (
     drink_id TEXT PRIMARY KEY,
     wine_type_id TEXT NOT NULL,
     vintage_year INTEGER,
-    
+
     FOREIGN KEY (drink_id) REFERENCES drinks(id),
     FOREIGN KEY (wine_type_id) REFERENCES wine_types(id)
 );
@@ -204,4 +204,9 @@ CREATE TABLE IF NOT EXISTS spirits (
     FOREIGN KEY (drink_id) REFERENCES drinks(id),
     FOREIGN KEY (spirit_type_id) REFERENCES spirit_types(id),
     FOREIGN KEY (aging_container_id) REFERENCES spirit_aging_containers(id)
+);
+
+-- SPIRIT HASH
+CREATE TABLE IF NOT EXISTS unique_spirit_identities (
+    hash TEXT PRIMARY KEY
 );

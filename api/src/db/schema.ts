@@ -140,6 +140,11 @@ export const spirits = sqliteTable('spirits', {
     agingTimeMonths: integer('aging_time_months'),
 })
 
+// ==================== SPIRIT HASH ====================
+export const uniqueSpiritIdentities = sqliteTable('unique_spirit_identities', {
+    hash: text('hash').primaryKey()
+})
+
 // ==================== RELATIONS ====================
 
 export const countriesRelations = relations(countries, ({ many }) => ({
