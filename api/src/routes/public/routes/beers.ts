@@ -23,8 +23,7 @@ route.get('/beers', async (c) => {
         const offset = (page - 1) * limit
 
         const db = drizzle(c.env.DB, { schema })
-        const beers = await db
-        .select({
+        const beers = await db.select({
             id: schema.beers.drinkId,
             name: schema.drinks.name,
             brand: schema.brands.name,
@@ -100,7 +99,7 @@ route.get('/beers/:id', async (c) => {
             )
             .where(eq(schema.beers.drinkId, id))
             .limit(1);
-        
+
         if (beers.length === 0) {
             return c.json({ error: 'Beer not found' }, 404)
         }
