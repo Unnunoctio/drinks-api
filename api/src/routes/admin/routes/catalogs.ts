@@ -2,6 +2,7 @@ import * as schema from '@/db/schema'
 import { generateSlug } from '@/utils/generateSlug'
 import { beerStyleSchema } from '@/validations/beerValidations'
 import { brandSchema, categorySchema, countrySchema, originSchema, packagingSchema } from '@/validations/catalogValidations'
+import { spiritAgingContainerSchema, spiritTypeSchema } from '@/validations/spiritValidations'
 import { D1Database } from "@cloudflare/workers-types"
 import { DrizzleQueryError, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
@@ -69,6 +70,16 @@ route.get('/export-catalog', async (c) => {
                         formula: '$A$2:$A$1000'
                     }
                 ]
+            },
+            {
+                sheet: 'Spirit-Types',
+                data: await db.select().from(schema.spiritTypes).orderBy(schema.spiritTypes.name),
+                validations: []
+            },
+            {
+                sheet: 'Spirit-Aging-Containers',
+                data: await db.select().from(schema.spiritAgingContainers).orderBy(schema.spiritAgingContainers.name),
+                validations: []
             }
         ]
 
@@ -197,6 +208,20 @@ route.post('/import-catalog', async (c) => {
                         values: <{ id: string }[]>[]
                     }
                 ]
+            },
+            {
+                sheet: 'Spirit-Types',
+                getSlug: (data: any) => generateSlug(data.name),
+                schemaValidation: spiritTypeSchema,
+                dbTable: schema.spiritTypes,
+                set: { name: sql`excluded.name`, description: sql`excluded.description` },
+            },
+            {
+                sheet: 'Spirit-Aging-Containers',
+                getSlug: (data: any) => generateSlug(data.name),
+                schemaValidation: spiritAgingContainerSchema,
+                dbTable: schema.spiritAgingContainers,
+                set: { name: sql`excluded.name` },
             }
         ]
 

@@ -1,5 +1,6 @@
-import catalogRoutes from '@/routes/admin/routes/catalogs'
 import beerRoutes from '@/routes/admin/routes/beers'
+import catalogRoutes from '@/routes/admin/routes/catalogs'
+import spiritRoutes from '@/routes/admin/routes/spirits'
 import { Hono } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 
@@ -19,6 +20,7 @@ router.get('/', (c) => {
 })
 
 router.route('', beerRoutes)
+router.route('', spiritRoutes)
 router.route('', catalogRoutes)
 
 export default router
