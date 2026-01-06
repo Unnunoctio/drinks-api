@@ -470,7 +470,7 @@ route.post('/beers', async (c) => {
 route.post('/beer-styles', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
-     try {
+    try {
         const body = await c.req.json()
 
         const validation = beerStyleSchema.safeParse(body)
