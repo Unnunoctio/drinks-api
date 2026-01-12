@@ -11,7 +11,9 @@ export const countries = sqliteTable('countries', {
 // ==================== ORIGINS ====================
 export const origins = sqliteTable('origins', {
     id: text('id').primaryKey(),
-    countryId: text('country_id').notNull().references(() => countries.id),
+    countryId: text('country_id')
+        .notNull()
+        .references(() => countries.id),
     region: text('region'),
 })
 
@@ -19,7 +21,9 @@ export const origins = sqliteTable('origins', {
 export const brands = sqliteTable('brands', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
-    originId: text('origin_id').notNull().references(() => origins.id),
+    originId: text('origin_id')
+        .notNull()
+        .references(() => origins.id),
     website: text('website').notNull(),
 })
 
@@ -39,9 +43,13 @@ export const packaging = sqliteTable('packaging', {
 export const drinks = sqliteTable('drinks', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
-    brandId: text('brand_id').notNull().references(() => brands.id),
+    brandId: text('brand_id')
+        .notNull()
+        .references(() => brands.id),
     alcoholByVolume: real('alcohol_by_volume').notNull(),
-    categoryId: text('category_id').notNull().references(() => categories.id),
+    categoryId: text('category_id')
+        .notNull()
+        .references(() => categories.id),
     originId: text('origin_id').references(() => origins.id),
     createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
@@ -50,8 +58,12 @@ export const drinks = sqliteTable('drinks', {
 // ==================== DRINK FORMATS ====================
 export const drinkFormats = sqliteTable('drink_formats', {
     id: text('id').primaryKey(),
-    drinkId: text('drink_id').notNull().references(() => drinks.id),
-    packagingId: text('packaging_id').notNull().references(() => packaging.id),
+    drinkId: text('drink_id')
+        .notNull()
+        .references(() => drinks.id),
+    packagingId: text('packaging_id')
+        .notNull()
+        .references(() => packaging.id),
     volumeCc: integer('volume_cc').notNull(),
 })
 
@@ -60,14 +72,20 @@ export const beerStyles = sqliteTable('beer_styles', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     description: text('description'),
-    originId: text('origin_id').notNull().references(() => origins.id),
+    originId: text('origin_id')
+        .notNull()
+        .references(() => origins.id),
     parentStyleId: text('parent_style_id').references((): any => beerStyles.id),
 })
 
 // ==================== BEERS ====================
 export const beers = sqliteTable('beers', {
-    drinkId: text('drink_id').primaryKey().references(() => drinks.id),
-    beerStyleId: text('beer_style_id').notNull().references(() => beerStyles.id),
+    drinkId: text('drink_id')
+        .primaryKey()
+        .references(() => drinks.id),
+    beerStyleId: text('beer_style_id')
+        .notNull()
+        .references(() => beerStyles.id),
     ibu: integer('ibu'),
     servingTempMinC: integer('serving_temp_min_c'),
     servingTempMaxC: integer('serving_temp_max_c'),
@@ -75,7 +93,7 @@ export const beers = sqliteTable('beers', {
 
 // ==================== BEER HASH ====================
 export const uniqueBeerIdentities = sqliteTable('unique_beer_identities', {
-    hash: text('hash').primaryKey()
+    hash: text('hash').primaryKey(),
 })
 
 // ==================== WINE TYPES ====================
@@ -86,8 +104,12 @@ export const wineTypes = sqliteTable('wine_types', {
 
 // ==================== WINES ====================
 export const wines = sqliteTable('wines', {
-    drinkId: text('drink_id').primaryKey().references(() => drinks.id),
-    wineTypeId: text('wine_type_id').notNull().references(() => wineTypes.id),
+    drinkId: text('drink_id')
+        .primaryKey()
+        .references(() => drinks.id),
+    wineTypeId: text('wine_type_id')
+        .notNull()
+        .references(() => wineTypes.id),
     vintageYear: integer('vintage_year'),
 })
 
@@ -100,8 +122,12 @@ export const wineStrains = sqliteTable('wine_strains', {
 
 // ==================== WINE <-> STRAINS ====================
 export const wineWineStrains = sqliteTable('wine_wine_strains', {
-    wineId: text('wine_id').notNull().references(() => wines.drinkId),
-    strainId: text('strain_id').notNull().references(() => wineStrains.id),
+    wineId: text('wine_id')
+        .notNull()
+        .references(() => wines.drinkId),
+    strainId: text('strain_id')
+        .notNull()
+        .references(() => wineStrains.id),
     percentage: integer('percentage'),
 })
 
@@ -115,8 +141,12 @@ export const wineVineyards = sqliteTable('wine_vineyards', {
 
 // ==================== WINE <-> VINEYARDS ====================
 export const wineWineVineyards = sqliteTable('wine_wine_vineyards', {
-    wineId: text('wine_id').notNull().references(() => wines.drinkId),
-    vineyardId: text('vineyard_id').notNull().references(() => wineVineyards.id),
+    wineId: text('wine_id')
+        .notNull()
+        .references(() => wines.drinkId),
+    vineyardId: text('vineyard_id')
+        .notNull()
+        .references(() => wineVineyards.id),
 })
 
 // ==================== SPIRIT TYPES ====================
@@ -134,15 +164,19 @@ export const spiritAgingContainers = sqliteTable('spirit_aging_containers', {
 
 // ==================== SPIRITS ====================
 export const spirits = sqliteTable('spirits', {
-    drinkId: text('drink_id').primaryKey().references(() => drinks.id),
-    spiritTypeId: text('spirit_type_id').notNull().references(() => spiritTypes.id),
+    drinkId: text('drink_id')
+        .primaryKey()
+        .references(() => drinks.id),
+    spiritTypeId: text('spirit_type_id')
+        .notNull()
+        .references(() => spiritTypes.id),
     agingContainerId: text('aging_container_id').references(() => spiritAgingContainers.id),
     agingTimeMonths: integer('aging_time_months'),
 })
 
 // ==================== SPIRIT HASH ====================
 export const uniqueSpiritIdentities = sqliteTable('unique_spirit_identities', {
-    hash: text('hash').primaryKey()
+    hash: text('hash').primaryKey(),
 })
 
 // ==================== RELATIONS ====================

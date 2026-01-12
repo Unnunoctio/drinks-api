@@ -6,10 +6,10 @@ export const beerSchema = z.object({
     alcoholByVolume: z.number().min(0, { message: 'ABV must be greater than 0' }).max(100, { message: 'ABV must be less than 100' }),
     categoryId: z.string().min(1, { message: 'Category ID is required' }),
     originId: z.string().nullable().optional(),
-    
+
     packagingId: z.string().min(1, { message: 'Packaging ID is required' }),
     volumeCc: z.number().min(0, { message: 'Volume must be greater than 0' }),
-    
+
     beerStyleId: z.string().min(1, { message: 'Beer style ID is required' }),
     ibu: z.number().min(0, { message: 'IBU must be greater than 0' }).max(100, { message: 'IBU must be less than 100' }).nullable().optional(),
     servingTempMinC: z.number().nullable().optional(),

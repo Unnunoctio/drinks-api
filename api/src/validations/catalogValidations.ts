@@ -7,7 +7,7 @@ export const countrySchema = z.object({
 
 export const originSchema = z.object({
     countryId: z.string().min(1, { message: 'Country ID is required' }),
-    region: z.string().nullable().optional()
+    region: z.string().nullable().optional(),
 })
 
 export const brandSchema = z.object({
@@ -17,9 +17,9 @@ export const brandSchema = z.object({
 })
 
 export const categorySchema = z.object({
-    name: z.string().min(1, { message: 'Name is required' })
+    name: z.string().min(1, { message: 'Name is required' }),
 })
 
 export const packagingSchema = z.object({
-    name: z.string().min(1, { message: 'Name is required' })
+    name: z.string().min(1, { message: 'Name is required' }),
 })

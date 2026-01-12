@@ -22,12 +22,15 @@ route.get('/countries', async (c) => {
         const offset = (page - 1) * limit
 
         const db = drizzle(c.env.DB, { schema })
-        const countries = await db.select().from(schema.countries).orderBy(schema.countries.name);
+        const countries = await db.select().from(schema.countries).orderBy(schema.countries.name)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(countries.length / limit) },
-            data: countries.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(countries.length / limit) },
+                data: countries.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -47,16 +50,19 @@ route.get('/origins', async (c) => {
             .select({
                 id: schema.origins.id,
                 country: schema.countries.name,
-                region: schema.origins.region
+                region: schema.origins.region,
             })
             .from(schema.origins)
             .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
-            .orderBy(schema.countries.name, schema.origins.region);
+            .orderBy(schema.countries.name, schema.origins.region)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(origins.length / limit) },
-            data: origins.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(origins.length / limit) },
+                data: origins.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -78,17 +84,20 @@ route.get('/brands', async (c) => {
                 name: schema.brands.name,
                 country: schema.countries.name,
                 region: schema.origins.region,
-                website: schema.brands.website
+                website: schema.brands.website,
             })
             .from(schema.brands)
             .innerJoin(schema.origins, eq(schema.brands.originId, schema.origins.id))
             .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
-            .orderBy(schema.brands.name);
+            .orderBy(schema.brands.name)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(brands.length / limit) },
-            data: brands.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(brands.length / limit) },
+                data: brands.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -104,12 +113,15 @@ route.get('/categories', async (c) => {
         const offset = (page - 1) * limit
 
         const db = drizzle(c.env.DB, { schema })
-        const categories = await db.select().from(schema.categories).orderBy(schema.categories.name);
+        const categories = await db.select().from(schema.categories).orderBy(schema.categories.name)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(categories.length / limit) },
-            data: categories.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(categories.length / limit) },
+                data: categories.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -125,12 +137,15 @@ route.get('/packaging', async (c) => {
         const offset = (page - 1) * limit
 
         const db = drizzle(c.env.DB, { schema })
-        const packaging = await db.select().from(schema.packaging).orderBy(schema.packaging.name);
+        const packaging = await db.select().from(schema.packaging).orderBy(schema.packaging.name)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(packaging.length / limit) },
-            data: packaging.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(packaging.length / limit) },
+                data: packaging.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }

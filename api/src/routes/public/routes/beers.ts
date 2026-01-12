@@ -23,20 +23,21 @@ route.get('/beers', async (c) => {
         const offset = (page - 1) * limit
 
         const db = drizzle(c.env.DB, { schema })
-        const beers = await db.select({
-            id: schema.beers.drinkId,
-            name: schema.drinks.name,
-            brand: schema.brands.name,
-            abv: schema.drinks.alcoholByVolume,
-            packaging: schema.packaging.name,
-            volume: schema.drinkFormats.volumeCc,
-            style: schema.beerStyles.name,
-            ibu: schema.beers.ibu,
-            servingTempMinC: schema.beers.servingTempMinC,
-            servingTempMaxC: schema.beers.servingTempMaxC,
-            country: schema.countries.name,
-            region: schema.origins.region,
-        })
+        const beers = await db
+            .select({
+                id: schema.beers.drinkId,
+                name: schema.drinks.name,
+                brand: schema.brands.name,
+                abv: schema.drinks.alcoholByVolume,
+                packaging: schema.packaging.name,
+                volume: schema.drinkFormats.volumeCc,
+                style: schema.beerStyles.name,
+                ibu: schema.beers.ibu,
+                servingTempMinC: schema.beers.servingTempMinC,
+                servingTempMaxC: schema.beers.servingTempMaxC,
+                country: schema.countries.name,
+                region: schema.origins.region,
+            })
             .from(schema.beers)
             .innerJoin(schema.drinks, eq(schema.beers.drinkId, schema.drinks.id))
             .innerJoin(schema.brands, eq(schema.drinks.brandId, schema.brands.id))
@@ -44,19 +45,16 @@ route.get('/beers', async (c) => {
             .innerJoin(schema.packaging, eq(schema.drinkFormats.packagingId, schema.packaging.id))
             .innerJoin(schema.beerStyles, eq(schema.beers.beerStyleId, schema.beerStyles.id))
             // Origen efectivo del drink (prioriza drinks.origin_id)
-            .leftJoin(
-                schema.origins,
-                eq(schema.origins.id, sql`COALESCE(${schema.drinks.originId}, ${schema.brands.originId})`)
-            )
-            .leftJoin(
-                schema.countries,
-                eq(schema.origins.countryId, schema.countries.id)
-            );
+            .leftJoin(schema.origins, eq(schema.origins.id, sql`COALESCE(${schema.drinks.originId}, ${schema.brands.originId})`))
+            .leftJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(beers.length / limit) },
-            data: beers.sort((a, b) => a.name.localeCompare(b.name)).slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(beers.length / limit) },
+                data: beers.sort((a, b) => a.name.localeCompare(b.name)).slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -68,20 +66,20 @@ route.get('/beers/:id', async (c) => {
 
         const db = drizzle(c.env.DB, { schema })
         const beers = await db
-        .select({
-            id: schema.beers.drinkId,
-            name: schema.drinks.name,
-            brand: schema.brands.name,
-            abv: schema.drinks.alcoholByVolume,
-            packaging: schema.packaging.name,
-            volume: schema.drinkFormats.volumeCc,
-            style: schema.beerStyles.name,
-            ibu: schema.beers.ibu,
-            servingTempMinC: schema.beers.servingTempMinC,
-            servingTempMaxC: schema.beers.servingTempMaxC,
-            country: schema.countries.name,
-            region: schema.origins.region,
-        })
+            .select({
+                id: schema.beers.drinkId,
+                name: schema.drinks.name,
+                brand: schema.brands.name,
+                abv: schema.drinks.alcoholByVolume,
+                packaging: schema.packaging.name,
+                volume: schema.drinkFormats.volumeCc,
+                style: schema.beerStyles.name,
+                ibu: schema.beers.ibu,
+                servingTempMinC: schema.beers.servingTempMinC,
+                servingTempMaxC: schema.beers.servingTempMaxC,
+                country: schema.countries.name,
+                region: schema.origins.region,
+            })
             .from(schema.beers)
             .innerJoin(schema.drinks, eq(schema.beers.drinkId, schema.drinks.id))
             .innerJoin(schema.brands, eq(schema.drinks.brandId, schema.brands.id))
@@ -89,16 +87,10 @@ route.get('/beers/:id', async (c) => {
             .innerJoin(schema.packaging, eq(schema.drinkFormats.packagingId, schema.packaging.id))
             .innerJoin(schema.beerStyles, eq(schema.beers.beerStyleId, schema.beerStyles.id))
             // Origen efectivo del drink (prioriza drinks.origin_id)
-            .leftJoin(
-                schema.origins,
-                eq(schema.origins.id, sql`COALESCE(${schema.drinks.originId}, ${schema.brands.originId})`)
-            )
-            .leftJoin(
-                schema.countries,
-                eq(schema.origins.countryId, schema.countries.id)
-            )
+            .leftJoin(schema.origins, eq(schema.origins.id, sql`COALESCE(${schema.drinks.originId}, ${schema.brands.originId})`))
+            .leftJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
             .where(eq(schema.beers.drinkId, id))
-            .limit(1);
+            .limit(1)
 
         if (beers.length === 0) {
             return c.json({ error: 'Beer not found' }, 404)
@@ -128,18 +120,21 @@ route.get('/beer-styles', async (c) => {
                 description: schema.beerStyles.description,
                 country: schema.countries.name,
                 region: schema.origins.region,
-                parentStyle: parentStylesAlias.name
+                parentStyle: parentStylesAlias.name,
             })
             .from(schema.beerStyles)
             .innerJoin(schema.origins, eq(schema.beerStyles.originId, schema.origins.id))
             .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
             .leftJoin(parentStylesAlias, eq(schema.beerStyles.parentStyleId, parentStylesAlias.id))
-            .orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name);
+            .orderBy(schema.beerStyles.parentStyleId, schema.beerStyles.name)
 
-        return c.json({
-            pagination: { page, limit, totalPages: Math.ceil(beerStyles.length / limit) },
-            data: beerStyles.slice(offset, offset + limit)
-        }, 200)
+        return c.json(
+            {
+                pagination: { page, limit, totalPages: Math.ceil(beerStyles.length / limit) },
+                data: beerStyles.slice(offset, offset + limit),
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }
@@ -158,22 +153,25 @@ route.get('/beer-styles/:id', async (c) => {
                 description: schema.beerStyles.description,
                 country: schema.countries.name,
                 region: schema.origins.region,
-                parentStyle: parentStylesAlias.name
+                parentStyle: parentStylesAlias.name,
             })
             .from(schema.beerStyles)
             .innerJoin(schema.origins, eq(schema.beerStyles.originId, schema.origins.id))
             .innerJoin(schema.countries, eq(schema.origins.countryId, schema.countries.id))
             .leftJoin(parentStylesAlias, eq(schema.beerStyles.parentStyleId, parentStylesAlias.id))
             .where(eq(schema.beerStyles.id, id))
-            .limit(1);
+            .limit(1)
 
         if (beerStyles.length === 0) {
             return c.json({ error: 'Beer Style not found' }, 404)
         }
 
-        return c.json({
-            data: beerStyles[0]
-        }, 200)
+        return c.json(
+            {
+                data: beerStyles[0],
+            },
+            200
+        )
     } catch (error) {
         return c.json({ error: 'Internal server error' }, 500)
     }

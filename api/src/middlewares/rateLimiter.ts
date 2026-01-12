@@ -1,9 +1,9 @@
 import { Context, Next } from 'hono'
 
 interface RateLimitOptions {
-    windowMs: number    // Window in ms
-    max: number         // Maximum requests in the window
-    monthlyMax: number  // Maximum requests per month
+    windowMs: number // Window in ms
+    max: number // Maximum requests in the window
+    monthlyMax: number // Maximum requests per month
 }
 
 export function rateLimiter(options: RateLimitOptions) {
@@ -16,31 +16,35 @@ export function rateLimiter(options: RateLimitOptions) {
 
         // key for tracking monthly window
         const monthKey = `ratelimit:month:${ip}:${new Date().getMonth()}`
-        
+
         // verify short limit
         const shortCount = await c.env.RATE_LIMIT_KV.get(shortKey)
         if (shortCount && parseInt(shortCount) >= options.max) {
-            return c.json({
-                error: 'Too many requests',
-                retryAfter: Math.ceil(options.windowMs / 1000)
-            }, 429)
+            return c.json(
+                {
+                    error: 'Too many requests',
+                    retryAfter: Math.ceil(options.windowMs / 1000),
+                },
+                429
+            )
         }
 
         // verify month limit
         const monthCount = await c.env.RATE_LIMIT_KV.get(monthKey)
         if (monthCount && parseInt(monthCount) >= options.monthlyMax) {
-            return c.json({
-                error: 'Monthly limit exceeded',
-                limit: options.monthlyMax
-            }, 429)
+            return c.json(
+                {
+                    error: 'Monthly limit exceeded',
+                    limit: options.monthlyMax,
+                },
+                429
+            )
         }
 
         // Increment short and month counters
-        await c.env.RATE_LIMIT_KV.put(
-            shortKey,
-            ((shortCount ? parseInt(shortCount) : 0) + 1).toString(),
-            { expirationTtl: Math.ceil(options.windowMs / 1000) * 2 }
-        )
+        await c.env.RATE_LIMIT_KV.put(shortKey, ((shortCount ? parseInt(shortCount) : 0) + 1).toString(), {
+            expirationTtl: Math.ceil(options.windowMs / 1000) * 2,
+        })
 
         await c.env.RATE_LIMIT_KV.put(
             monthKey,

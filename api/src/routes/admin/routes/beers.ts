@@ -39,7 +39,7 @@ route.get('/export-beers', async (c) => {
             { header: 'categories', key: 'categories', width: 20 },
             { header: 'origins', key: 'origins', width: 20 },
             { header: 'packaging', key: 'packaging', width: 20 },
-            { header: 'beerStyles', key: 'beerStyles', width: 20 }
+            { header: 'beerStyles', key: 'beerStyles', width: 20 },
         ]
 
         // Find the maximum length to iterate
@@ -58,46 +58,47 @@ route.get('/export-beers', async (c) => {
                 categories: externalValues.categories[i]?.id || '',
                 origins: externalValues.origins[i]?.id || '',
                 packaging: externalValues.packaging[i]?.id || '',
-                beerStyles: externalValues.beerStyles[i]?.id || ''
+                beerStyles: externalValues.beerStyles[i]?.id || '',
             })
         }
 
         // TODO: Export Beers by Brand
-        const beers = await db.select({
-            id: schema.drinks.id,
-            name: schema.drinks.name,
-            brandId: schema.drinks.brandId,
-            alcoholByVolume: schema.drinks.alcoholByVolume,
-            categoryId: schema.drinks.categoryId,
-            originId: schema.drinks.originId,
-            packagingId: schema.drinkFormats.packagingId,
-            volumeCc: schema.drinkFormats.volumeCc,
-            beerStyleId: schema.beers.beerStyleId,
-            ibu: schema.beers.ibu,
-            servingTempMinC: schema.beers.servingTempMinC,
-            servingTempMaxC: schema.beers.servingTempMaxC
-        })
+        const beers = await db
+            .select({
+                id: schema.drinks.id,
+                name: schema.drinks.name,
+                brandId: schema.drinks.brandId,
+                alcoholByVolume: schema.drinks.alcoholByVolume,
+                categoryId: schema.drinks.categoryId,
+                originId: schema.drinks.originId,
+                packagingId: schema.drinkFormats.packagingId,
+                volumeCc: schema.drinkFormats.volumeCc,
+                beerStyleId: schema.beers.beerStyleId,
+                ibu: schema.beers.ibu,
+                servingTempMinC: schema.beers.servingTempMinC,
+                servingTempMaxC: schema.beers.servingTempMaxC,
+            })
             .from(schema.beers)
             .innerJoin(schema.drinks, eq(schema.beers.drinkId, schema.drinks.id))
             .innerJoin(schema.drinkFormats, eq(schema.drinkFormats.drinkId, schema.drinks.id))
             .orderBy(schema.drinks.brandId)
 
         const beersByBrand = Object.groupBy(beers, ({ brandId }) => brandId)
-        Object.keys(beersByBrand).forEach(brandId => {
+        Object.keys(beersByBrand).forEach((brandId) => {
             const brandBeers = beersByBrand[brandId]
             if (brandBeers === undefined) return
 
             const worksheet = workbook.addWorksheet(brandId)
 
-            const columns = Object.keys(brandBeers[0]).map(key => ({
+            const columns = Object.keys(brandBeers[0]).map((key) => ({
                 header: key,
                 key: key,
-                width: 20
+                width: 20,
             }))
             worksheet.columns = columns
 
             // Sort by name and volume (ascending)
-            brandBeers.sort((a, b) => a.name.localeCompare(b.name) || a.volumeCc - b.volumeCc).forEach(row => worksheet.addRow(row))
+            brandBeers.sort((a, b) => a.name.localeCompare(b.name) || a.volumeCc - b.volumeCc).forEach((row) => worksheet.addRow(row))
 
             // Add validations
             function addValidation(column: string, formula: string) {
@@ -105,7 +106,7 @@ route.get('/export-beers', async (c) => {
                     worksheet.getCell(`${column}${row}`).dataValidation = {
                         type: 'list',
                         allowBlank: true,
-                        formulae: [formula]
+                        formulae: [formula],
                     }
                 }
             }
@@ -141,12 +142,16 @@ route.post('/import-beers', async (c) => {
         const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
         if (['.xlsx', '.xls'].includes(extension) === false) return c.json({ error: 'File must be an Excel file' }, 400)
 
-        const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, raw: false })
+        const workbook = XLSX.read(await file.arrayBuffer(), {
+            type: 'array',
+            cellDates: true,
+            raw: false,
+        })
         const sheetNames = workbook.SheetNames
 
-        const errors: Array<{ sheet: string, row: number, error: unknown }> = []
+        const errors: Array<{ sheet: string; row: number; error: unknown }> = []
 
-        const config_sheets = sheetNames.map(sheetName => {
+        const config_sheets = sheetNames.map((sheetName) => {
             return {
                 sheet: sheetName,
                 schemaValidation: beerSchema,
@@ -155,34 +160,34 @@ route.post('/import-beers', async (c) => {
                         field: 'brandId',
                         idFieldDB: schema.brands.id,
                         tableDB: schema.brands,
-                        values: <{ id: string }[]>[]
+                        values: <{ id: string }[]>[],
                     },
                     {
                         field: 'categoryId',
                         idFieldDB: schema.categories.id,
                         tableDB: schema.categories,
-                        values: <{ id: string }[]>[]
+                        values: <{ id: string }[]>[],
                     },
                     {
                         field: 'originId',
                         idFieldDB: schema.origins.id,
                         tableDB: schema.origins,
-                        values: <{ id: string }[]>[]
+                        values: <{ id: string }[]>[],
                     },
                     {
                         field: 'beerStyleId',
                         idFieldDB: schema.beerStyles.id,
                         tableDB: schema.beerStyles,
-                        values: <{ id: string }[]>[]
-                    }
-                ]
+                        values: <{ id: string }[]>[],
+                    },
+                ],
             }
         })
 
         for (const sheetName of sheetNames) {
-            if (sheetName === "VALUES") continue
+            if (sheetName === 'VALUES') continue
 
-            const config = config_sheets.find(c => c.sheet === sheetName)
+            const config = config_sheets.find((c) => c.sheet === sheetName)
             if (!config) continue
 
             // Get all values dynamically for references
@@ -207,7 +212,7 @@ route.post('/import-beers', async (c) => {
                     errors.push({
                         sheet: sheetName,
                         row: rowNumber,
-                        error: `Schema validation failed: ${JSON.parse(validation.error.message)}`
+                        error: `Schema validation failed: ${JSON.parse(validation.error.message)}`,
                     })
                     continue
                 }
@@ -218,11 +223,11 @@ route.post('/import-beers', async (c) => {
 
                     for (const reference of config.references) {
                         const value = data[reference.field]
-                        if (value && !reference.values.find(v => v.id === value)) {
+                        if (value && !reference.values.find((v) => v.id === value)) {
                             errors.push({
                                 sheet: sheetName,
                                 row: rowNumber,
-                                error: `Foreign key error: ${reference.field} = '${value}' does not exist`
+                                error: `Foreign key error: ${reference.field} = '${value}' does not exist`,
                             })
                             hasReferenceError = true
                         }
@@ -248,7 +253,8 @@ route.post('/import-beers', async (c) => {
 
                     // Search for existing drink
                     let drinkId: string | null = null
-                    const drinkExisting = await db.select({ id: schema.drinks.id })
+                    const drinkExisting = await db
+                        .select({ id: schema.drinks.id })
                         .from(schema.drinks)
                         .innerJoin(schema.beers, eq(schema.beers.drinkId, schema.drinks.id))
                         .where(
@@ -259,45 +265,52 @@ route.post('/import-beers', async (c) => {
                                 eq(schema.drinks.categoryId, data.categoryId),
                                 eq(schema.beers.beerStyleId, data.beerStyleId)
                             )
-                        ).limit(1)
+                        )
+                        .limit(1)
 
                     if (drinkExisting.length > 0) {
                         drinkId = drinkExisting[0].id
                         // update Drink
-                        await db.insert(schema.drinks).values({
-                            id: drinkId,
-                            name: data.name,
-                            brandId: data.brandId,
-                            alcoholByVolume: data.alcoholByVolume,
-                            categoryId: data.categoryId,
-                            originId: data.originId,
-                        }).onConflictDoUpdate({
-                            target: schema.drinks.id,
-                            set: {
-                                name: sql`excluded.name`,
-                                brandId: sql`excluded.brand_id`,
-                                alcoholByVolume: sql`excluded.alcohol_by_volume`,
-                                categoryId: sql`excluded.category_id`,
-                                originId: sql`excluded.origin_id`,
-                            }
-                        })
+                        await db
+                            .insert(schema.drinks)
+                            .values({
+                                id: drinkId,
+                                name: data.name,
+                                brandId: data.brandId,
+                                alcoholByVolume: data.alcoholByVolume,
+                                categoryId: data.categoryId,
+                                originId: data.originId,
+                            })
+                            .onConflictDoUpdate({
+                                target: schema.drinks.id,
+                                set: {
+                                    name: sql`excluded.name`,
+                                    brandId: sql`excluded.brand_id`,
+                                    alcoholByVolume: sql`excluded.alcohol_by_volume`,
+                                    categoryId: sql`excluded.category_id`,
+                                    originId: sql`excluded.origin_id`,
+                                },
+                            })
 
                         // update Beer
-                        await db.insert(schema.beers).values({
-                            drinkId: drinkId,
-                            beerStyleId: data.beerStyleId,
-                            ibu: data.ibu,
-                            servingTempMinC: data.servingTempMinC,
-                            servingTempMaxC: data.servingTempMaxC,
-                        }).onConflictDoUpdate({
-                            target: schema.beers.drinkId,
-                            set: {
-                                beerStyleId: sql`excluded.beer_style_id`,
-                                ibu: sql`excluded.ibu`,
-                                servingTempMinC: sql`excluded.serving_temp_min_c`,
-                                servingTempMaxC: sql`excluded.serving_temp_max_c`,
-                            }
-                        })
+                        await db
+                            .insert(schema.beers)
+                            .values({
+                                drinkId: drinkId,
+                                beerStyleId: data.beerStyleId,
+                                ibu: data.ibu,
+                                servingTempMinC: data.servingTempMinC,
+                                servingTempMaxC: data.servingTempMaxC,
+                            })
+                            .onConflictDoUpdate({
+                                target: schema.beers.drinkId,
+                                set: {
+                                    beerStyleId: sql`excluded.beer_style_id`,
+                                    ibu: sql`excluded.ibu`,
+                                    servingTempMinC: sql`excluded.serving_temp_min_c`,
+                                    servingTempMaxC: sql`excluded.serving_temp_max_c`,
+                                },
+                            })
                     } else {
                         // Insert drink
                         drinkId = uuidv7()
@@ -321,15 +334,17 @@ route.post('/import-beers', async (c) => {
                     }
 
                     // Search for existing format
-                    const formatExisting = await db.select({ id: schema.drinkFormats.id })
+                    const formatExisting = await db
+                        .select({ id: schema.drinkFormats.id })
                         .from(schema.drinkFormats)
                         .where(
                             and(
                                 eq(schema.drinkFormats.drinkId, drinkId),
                                 eq(schema.drinkFormats.packagingId, data.packagingId),
-                                eq(schema.drinkFormats.volumeCc, data.volumeCc),
+                                eq(schema.drinkFormats.volumeCc, data.volumeCc)
                             )
-                        ).limit(1)
+                        )
+                        .limit(1)
 
                     // Insert format if not exists
                     if (formatExisting.length === 0) {
@@ -347,7 +362,7 @@ route.post('/import-beers', async (c) => {
                     errors.push({
                         sheet: sheetName,
                         row: 0,
-                        error: `Database insert error: ${error instanceof DrizzleQueryError ? String(error.cause) : error.message}`
+                        error: `Database insert error: ${error instanceof DrizzleQueryError ? String(error.cause) : error.message}`,
                     })
                 }
             }
@@ -385,7 +400,8 @@ route.post('/beers', async (c) => {
         hashInserted = true
 
         // TODO: 2. Buscar si ya existe el drink + beer
-        const drinkExisting = await db.select({ drinkId: schema.drinks.id })
+        const drinkExisting = await db
+            .select({ drinkId: schema.drinks.id })
             .from(schema.drinks)
             .innerJoin(schema.beers, eq(schema.beers.drinkId, schema.drinks.id))
             .where(
@@ -396,7 +412,8 @@ route.post('/beers', async (c) => {
                     eq(schema.drinks.categoryId, data.categoryId),
                     eq(schema.beers.beerStyleId, data.beerStyleId)
                 )
-            ).limit(1)
+            )
+            .limit(1)
 
         if (drinkExisting.length > 0) {
             drinkId = drinkExisting[0].drinkId
@@ -432,13 +449,16 @@ route.post('/beers', async (c) => {
             volumeCc: data.volumeCc,
         })
 
-        return c.json({
-            hash: beerHash,
-            data: {
-                drinkId: drinkId,
-                formatId: formatId,
-            }
-        }, 201)
+        return c.json(
+            {
+                hash: beerHash,
+                data: {
+                    drinkId: drinkId,
+                    formatId: formatId,
+                },
+            },
+            201
+        )
     } catch (error: any) {
         // TODO: Compensacion
         try {
@@ -478,10 +498,13 @@ route.post('/beer-styles', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [beerStyle] = await db.insert(schema.beerStyles).values({
-            id: generateSlug(body.name),
-            ...validation.data,
-        }).returning();
+        const [beerStyle] = await db
+            .insert(schema.beerStyles)
+            .values({
+                id: generateSlug(body.name),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: beerStyle }, 201)
     } catch (error: any) {

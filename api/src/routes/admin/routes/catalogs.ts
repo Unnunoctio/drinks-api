@@ -3,11 +3,11 @@ import { generateSlug } from '@/utils/generateSlug'
 import { beerStyleSchema } from '@/validations/beerValidations'
 import { brandSchema, categorySchema, countrySchema, originSchema, packagingSchema } from '@/validations/catalogValidations'
 import { spiritAgingContainerSchema, spiritTypeSchema } from '@/validations/spiritValidations'
-import { D1Database } from "@cloudflare/workers-types"
-import { DrizzleQueryError, sql } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/d1"
+import { D1Database } from '@cloudflare/workers-types'
+import { DrizzleQueryError, sql } from 'drizzle-orm'
+import { drizzle } from 'drizzle-orm/d1'
 import ExcelJS from 'exceljs'
-import { Hono } from "hono"
+import { Hono } from 'hono'
 import * as XLSX from 'xlsx'
 
 type Bindings = {
@@ -25,7 +25,7 @@ route.get('/export-catalog', async (c) => {
             {
                 sheet: 'Countries',
                 data: await db.select().from(schema.countries).orderBy(schema.countries.name),
-                validations: []
+                validations: [],
             },
             {
                 sheet: 'Origins',
@@ -33,9 +33,9 @@ route.get('/export-catalog', async (c) => {
                 validations: [
                     {
                         column: 'B',
-                        formula: 'Countries!$A$2:$A$1000'
-                    }
-                ]
+                        formula: 'Countries!$A$2:$A$1000',
+                    },
+                ],
             },
             {
                 sheet: 'Brands',
@@ -43,19 +43,19 @@ route.get('/export-catalog', async (c) => {
                 validations: [
                     {
                         column: 'C',
-                        formula: 'Origins!$A$2:$A$1000'
-                    }
-                ]
+                        formula: 'Origins!$A$2:$A$1000',
+                    },
+                ],
             },
             {
                 sheet: 'Categories',
                 data: await db.select().from(schema.categories).orderBy(schema.categories.name),
-                validations: []
+                validations: [],
             },
             {
                 sheet: 'Packaging',
                 data: await db.select().from(schema.packaging).orderBy(schema.packaging.name),
-                validations: []
+                validations: [],
             },
             {
                 sheet: 'Beer-Styles',
@@ -63,24 +63,24 @@ route.get('/export-catalog', async (c) => {
                 validations: [
                     {
                         column: 'D',
-                        formula: 'Origins!$A$2:$A$1000'
+                        formula: 'Origins!$A$2:$A$1000',
                     },
                     {
                         column: 'E',
-                        formula: '$A$2:$A$1000'
-                    }
-                ]
+                        formula: '$A$2:$A$1000',
+                    },
+                ],
             },
             {
                 sheet: 'Spirit-Types',
                 data: await db.select().from(schema.spiritTypes).orderBy(schema.spiritTypes.name),
-                validations: []
+                validations: [],
             },
             {
                 sheet: 'Spirit-Aging-Containers',
                 data: await db.select().from(schema.spiritAgingContainers).orderBy(schema.spiritAgingContainers.name),
-                validations: []
-            }
+                validations: [],
+            },
         ]
 
         const workbook = new ExcelJS.Workbook()
@@ -88,21 +88,21 @@ route.get('/export-catalog', async (c) => {
         for (const d of catalogData) {
             const worksheet = workbook.addWorksheet(d.sheet)
 
-            const columns = Object.keys(d.data[0]).map(key => ({
+            const columns = Object.keys(d.data[0]).map((key) => ({
                 header: key,
                 key: key,
-                width: 20
+                width: 20,
             }))
             worksheet.columns = columns
 
-            d.data.forEach(row => worksheet.addRow(row))
+            d.data.forEach((row) => worksheet.addRow(row))
 
             for (const v of d.validations) {
                 for (let row = 2; row <= 1000; row++) {
                     worksheet.getCell(`${v.column}${row}`).dataValidation = {
                         type: 'list',
                         allowBlank: true,
-                        formulae: [v.formula]
+                        formulae: [v.formula],
                     }
                 }
             }
@@ -131,10 +131,14 @@ route.post('/import-catalog', async (c) => {
         const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
         if (['.xlsx', '.xls'].includes(extension) === false) return c.json({ error: 'File must be an Excel file' }, 400)
 
-        const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true, raw: false })
+        const workbook = XLSX.read(await file.arrayBuffer(), {
+            type: 'array',
+            cellDates: true,
+            raw: false,
+        })
         const sheetNames = workbook.SheetNames
 
-        const errors: Array<{ sheet: string, row: number, error: unknown }> = []
+        const errors: Array<{ sheet: string; row: number; error: unknown }> = []
 
         const config_sheets = [
             {
@@ -142,79 +146,100 @@ route.post('/import-catalog', async (c) => {
                 getSlug: (data: any) => generateSlug(data.isoCode),
                 schemaValidation: countrySchema,
                 dbTable: schema.countries,
-                set: { name: sql`excluded.name`, isoCode: sql`excluded.iso_code` }
+                set: {
+                    name: sql`excluded.name`,
+                    isoCode: sql`excluded.iso_code`,
+                },
             },
             {
                 sheet: 'Origins',
-                getSlug: (data: any) => generateSlug(`${data.countryId}-${(data.region === '' || data.region === undefined || data.region === null) ? 'none' : data.region}`),
+                getSlug: (data: any) =>
+                    generateSlug(
+                        `${data.countryId}-${data.region === '' || data.region === undefined || data.region === null ? 'none' : data.region}`
+                    ),
                 schemaValidation: originSchema,
                 dbTable: schema.origins,
-                set: { countryId: sql`excluded.country_id`, region: sql`excluded.region` },
+                set: {
+                    countryId: sql`excluded.country_id`,
+                    region: sql`excluded.region`,
+                },
                 references: [
                     {
                         field: 'countryId',
                         idFieldDB: schema.countries.id,
                         tableDB: schema.countries,
-                        values: <{ id: string }[]>[]
-                    }
-                ]
+                        values: <{ id: string }[]>[],
+                    },
+                ],
             },
             {
                 sheet: 'Brands',
                 getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: brandSchema,
                 dbTable: schema.brands,
-                set: { name: sql`excluded.name`, originId: sql`excluded.origin_id`, website: sql`excluded.website` },
+                set: {
+                    name: sql`excluded.name`,
+                    originId: sql`excluded.origin_id`,
+                    website: sql`excluded.website`,
+                },
                 references: [
                     {
                         field: 'originId',
                         idFieldDB: schema.origins.id,
                         tableDB: schema.origins,
-                        values: <{ id: string }[]>[]
-                    }
-                ]
+                        values: <{ id: string }[]>[],
+                    },
+                ],
             },
             {
                 sheet: 'Categories',
                 getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: categorySchema,
                 dbTable: schema.categories,
-                set: { name: sql`excluded.name` }
+                set: { name: sql`excluded.name` },
             },
             {
                 sheet: 'Packaging',
                 getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: packagingSchema,
                 dbTable: schema.packaging,
-                set: { name: sql`excluded.name` }
+                set: { name: sql`excluded.name` },
             },
             {
                 sheet: 'Beer-Styles',
                 getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: beerStyleSchema,
                 dbTable: schema.beerStyles,
-                set: { name: sql`excluded.name`, description: sql`excluded.description`, originId: sql`excluded.origin_id`, parentStyleId: sql`excluded.parent_style_id` },
+                set: {
+                    name: sql`excluded.name`,
+                    description: sql`excluded.description`,
+                    originId: sql`excluded.origin_id`,
+                    parentStyleId: sql`excluded.parent_style_id`,
+                },
                 references: [
                     {
                         field: 'originId',
                         idFieldDB: schema.origins.id,
                         tableDB: schema.origins,
-                        values: <{ id: string }[]>[]
+                        values: <{ id: string }[]>[],
                     },
                     {
                         field: 'parentStyleId',
                         idFieldDB: schema.beerStyles.id,
                         tableDB: schema.beerStyles,
-                        values: <{ id: string }[]>[]
-                    }
-                ]
+                        values: <{ id: string }[]>[],
+                    },
+                ],
             },
             {
                 sheet: 'Spirit-Types',
                 getSlug: (data: any) => generateSlug(data.name),
                 schemaValidation: spiritTypeSchema,
                 dbTable: schema.spiritTypes,
-                set: { name: sql`excluded.name`, description: sql`excluded.description` },
+                set: {
+                    name: sql`excluded.name`,
+                    description: sql`excluded.description`,
+                },
             },
             {
                 sheet: 'Spirit-Aging-Containers',
@@ -222,11 +247,11 @@ route.post('/import-catalog', async (c) => {
                 schemaValidation: spiritAgingContainerSchema,
                 dbTable: schema.spiritAgingContainers,
                 set: { name: sql`excluded.name` },
-            }
+            },
         ]
 
         for (const sheetName of sheetNames) {
-            const config = config_sheets.find(c => c.sheet === sheetName)
+            const config = config_sheets.find((c) => c.sheet === sheetName)
             if (!config) continue
 
             // Get all values dynamically for references
@@ -251,7 +276,7 @@ route.post('/import-catalog', async (c) => {
                     errors.push({
                         sheet: sheetName,
                         row: rowNumber,
-                        error: `Schema validation failed: ${JSON.parse(validation.error.message)}`
+                        error: `Schema validation failed: ${JSON.parse(validation.error.message)}`,
                     })
                     continue
                 }
@@ -262,11 +287,11 @@ route.post('/import-catalog', async (c) => {
 
                     for (const reference of config.references) {
                         const value = data[reference.field]
-                        if (value && !reference.values.find(v => v.id === value)) {
+                        if (value && !reference.values.find((v) => v.id === value)) {
                             errors.push({
                                 sheet: sheetName,
                                 row: rowNumber,
-                                error: `Foreign key error: ${reference.field} = '${value}' does not exist`
+                                error: `Foreign key error: ${reference.field} = '${value}' does not exist`,
                             })
                             hasReferenceError = true
                         }
@@ -291,10 +316,13 @@ route.post('/import-catalog', async (c) => {
                 const BATCH_SIZE = 20
                 for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
                     const batch = validRows.slice(i, i + BATCH_SIZE)
-                    await db.insert(config.dbTable).values(batch).onConflictDoUpdate({
-                        target: config.dbTable.id,
-                        set: config.set as any
-                    })
+                    await db
+                        .insert(config.dbTable)
+                        .values(batch)
+                        .onConflictDoUpdate({
+                            target: config.dbTable.id,
+                            set: config.set as any,
+                        })
                 }
             } catch (error: any) {
                 // Error dont have a cause
@@ -303,7 +331,7 @@ route.post('/import-catalog', async (c) => {
                 errors.push({
                     sheet: sheetName,
                     row: 0,
-                    error: `Database batch error: ${error instanceof DrizzleQueryError ? String(error.cause) : error.message}`
+                    error: `Database batch error: ${error instanceof DrizzleQueryError ? String(error.cause) : error.message}`,
                 })
             }
         }
@@ -318,7 +346,7 @@ route.post('/import-catalog', async (c) => {
 route.post('/countries', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
-     try {
+    try {
         const body = await c.req.json()
 
         const validation = countrySchema.safeParse(body)
@@ -326,10 +354,13 @@ route.post('/countries', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [country] = await db.insert(schema.countries).values({
-            id: generateSlug(validation.data.isoCode),
-            ...validation.data,
-        }).returning();
+        const [country] = await db
+            .insert(schema.countries)
+            .values({
+                id: generateSlug(validation.data.isoCode),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: country }, 201)
     } catch (error: any) {
@@ -346,7 +377,7 @@ route.post('/countries', async (c) => {
     }
 })
 
-route.post('/origins', async(c) => {
+route.post('/origins', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
     try {
@@ -357,10 +388,15 @@ route.post('/origins', async(c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [origin] = await db.insert(schema.origins).values({
-            id: generateSlug(`${body.countryId}-${(body.region === '' || body.region === undefined || body.region === null) ? 'none' : body.region}`),
-            ...validation.data,
-        }).returning();
+        const [origin] = await db
+            .insert(schema.origins)
+            .values({
+                id: generateSlug(
+                    `${body.countryId}-${body.region === '' || body.region === undefined || body.region === null ? 'none' : body.region}`
+                ),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: origin }, 201)
     } catch (error: any) {
@@ -380,7 +416,7 @@ route.post('/origins', async(c) => {
     }
 })
 
-route.post('/brands', async(c) => {
+route.post('/brands', async (c) => {
     const db = drizzle(c.env.DB, { schema })
 
     try {
@@ -391,10 +427,13 @@ route.post('/brands', async(c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [brand] = await db.insert(schema.brands).values({
-            id: generateSlug(body.name),
-            ...validation.data,
-        }).returning();
+        const [brand] = await db
+            .insert(schema.brands)
+            .values({
+                id: generateSlug(body.name),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: brand }, 201)
     } catch (error: any) {
@@ -425,10 +464,13 @@ route.post('/categories', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [category] = await db.insert(schema.categories).values({
-            id: generateSlug(body.name),
-            ...validation.data,
-        }).returning();
+        const [category] = await db
+            .insert(schema.categories)
+            .values({
+                id: generateSlug(body.name),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: category }, 201)
     } catch (error: any) {
@@ -456,10 +498,13 @@ route.post('/packaging', async (c) => {
             return c.json({ error: JSON.parse(validation.error.message) }, 400)
         }
 
-        const [packaging] = await db.insert(schema.packaging).values({
-            id: generateSlug(body.name),
-            ...validation.data,
-        }).returning();
+        const [packaging] = await db
+            .insert(schema.packaging)
+            .values({
+                id: generateSlug(body.name),
+                ...validation.data,
+            })
+            .returning()
 
         return c.json({ data: packaging }, 201)
     } catch (error: any) {

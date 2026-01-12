@@ -1,10 +1,10 @@
 interface BeerIdentityHashInput {
-    name: string,
-    brandId: string,
-    alcoholByVolume: number,
-    categoryId: string,
-    packagingId: string,
-    volumeCc: number,
+    name: string
+    brandId: string
+    alcoholByVolume: number
+    categoryId: string
+    packagingId: string
+    volumeCc: number
     beerStyleId: string
 }
 
@@ -16,7 +16,7 @@ export async function beerIdentityHash(input: BeerIdentityHashInput): Promise<st
         input.categoryId,
         input.packagingId,
         input.volumeCc.toString(),
-        input.beerStyleId
+        input.beerStyleId,
     ].join('|')
 
     // Convert to bytes
@@ -28,18 +28,18 @@ export async function beerIdentityHash(input: BeerIdentityHashInput): Promise<st
 
     // Convert hash to hex string
     const hashArray = Array.from(new Uint8Array(hashBuffer))
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 
     return hashHex
 }
 
 interface SpiritIdentityHashInput {
-    name: string,
-    brandId: string,
-    alcoholByVolume: number,
-    categoryId: string,
-    packagingId: string,
-    volumeCc: number,
+    name: string
+    brandId: string
+    alcoholByVolume: number
+    categoryId: string
+    packagingId: string
+    volumeCc: number
     spiritTypeId: string
 }
 
@@ -51,7 +51,7 @@ export async function spiritIdentityHash(input: SpiritIdentityHashInput): Promis
         input.categoryId,
         input.packagingId,
         input.volumeCc.toString(),
-        input.spiritTypeId
+        input.spiritTypeId,
     ].join('|')
 
     // Convert to bytes
@@ -63,7 +63,7 @@ export async function spiritIdentityHash(input: SpiritIdentityHashInput): Promis
 
     // Convert hash to hex string
     const hashArray = Array.from(new Uint8Array(hashBuffer))
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 
     return hashHex
 }
