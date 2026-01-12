@@ -1,7 +1,7 @@
 <script lang="js">
-    import { JsonViewer } from '@kaifronsdal/svelte-json-viewer';
+    import { JsonViewer } from '@kaifronsdal/svelte-json-viewer'
 
-    export let url;
+    export let url
 
     const get = async (url) => {
         const res = await fetch(url)
@@ -11,6 +11,6 @@
 
 {#await get(url)}
     <JsonViewer value={{ loading: true }} theme="dark" />
-{:then json} 
+{:then json}
     <JsonViewer value={json} theme="dark" />
 {/await}

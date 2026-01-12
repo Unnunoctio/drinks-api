@@ -1,7 +1,7 @@
 ---
-import { Image } from "astro:assets";
+import { Image } from 'astro:assets'
 
-const pathname = Astro.url.pathname;
+const pathname = Astro.url.pathname
 ---
 
 <nav class="flex justify-between w-full max-w-content py-2">
@@ -10,10 +10,10 @@ const pathname = Astro.url.pathname;
     </a>
 
     <ul class="flex gap-2 font-medium">
-        <li class={`${pathname === "/" ? "hidden sm:flex" : "flex"}`}>
+        <li class={`${pathname === '/' ? 'hidden sm:flex' : 'flex'}`}>
             <a href="/" aria-label="home" class="px-4 sm:px-8 py-2.5 text-[18px] hover:text-violet-700">Inicio</a>
         </li>
-        <li class={`${pathname === "/about" ? "hidden sm:flex" : "flex"}`}>
+        <li class={`${pathname === '/about' ? 'hidden sm:flex' : 'flex'}`}>
             <a href="/about" aria-label="about" class="px-4 sm:px-8 py-2.5 text-[18px] hover:text-violet-700">Acerca de</a>
         </li>
     </ul>

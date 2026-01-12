@@ -1,47 +1,47 @@
 {
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "compilerOptions": {
-        /* Target & Runtime */
-        "target": "ES2024",
-        "lib": ["ES2024", "WebWorker"],
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    /* Target & Runtime */
+    "target": "ES2024",
+    "lib": ["ES2024", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
 
-        /* Paths & Aliases */
-        "baseUrl": ".",
-        "paths": {
-        "@/*": ["src/*"]
-        },
-
-        /* Project Structure */
-        "rootDir": "src",
-        "outDir": "dist",
-
-        /* Cloudflare */
-        "types": ["node", "@cloudflare/workers-types"],
-
-        /* Interop */
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-
-        /* Strictness */
-        "strict": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "useUnknownInCatchVariables": true,
-
-        /* Emit */
-        "noEmit": true,
-        "noEmitOnError": true,
-        "sourceMap": true,
-
-        /* Quality */
-        "forceConsistentCasingInFileNames": true,
-        "skipLibCheck": true,
-
-        /* Misc */
-        "resolveJsonModule": true
+    /* Paths & Aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
     },
-    "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "dist"]
+
+    /* Project Structure */
+    "rootDir": "src",
+    "outDir": "dist",
+
+    /* Cloudflare */
+    "types": ["node", "@cloudflare/workers-types"],
+
+    /* Interop */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* Strictness */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "useUnknownInCatchVariables": true,
+
+    /* Emit */
+    "noEmit": true,
+    "noEmitOnError": true,
+    "sourceMap": true,
+
+    /* Quality */
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    /* Misc */
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

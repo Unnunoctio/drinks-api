@@ -19,10 +19,10 @@
   },
   "eslintConfig": {
     "parserOptions": {
-        "project": "./tsconfig.json"
+      "project": "./tsconfig.json"
     },
     "extends": [
-        "./node_modules/ts-standard/eslintrc.json"
+      "./node_modules/ts-standard/eslintrc.json"
     ]
   },
   "scripts": {

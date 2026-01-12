@@ -1,22 +1,22 @@
 <script lang="ts">
-    import ApiPetition from "./ApiPetition.svelte";
+    import ApiPetition from './ApiPetition.svelte'
 
-    export let urlPath: string;
+    export let urlPath: string
 
-    let urlActive = "beers";
-    let urlPetition = `${urlPath}/${urlActive}`;
+    let urlActive = 'beers'
+    let urlPetition = `${urlPath}/${urlActive}`
 
     function submit() {
-        if (urlActive === "") {
-            urlPetition = `${urlPath}`;
+        if (urlActive === '') {
+            urlPetition = `${urlPath}`
         } else {
-            urlPetition = `${urlPath}/${urlActive}`;
+            urlPetition = `${urlPath}/${urlActive}`
         }
     }
 
     function changeInput(value: string) {
-        urlActive = value;
-        submit();
+        urlActive = value
+        submit()
     }
 </script>
 
@@ -34,7 +34,9 @@
             class="flex-1 p-2 min-w-30 border border-l-0 sm:border-x-0 border-slate-200 rounded-r-lg sm:rounded-r-none outline-none bg-slate-50"
         />
     </section>
-    <button class="px-8 py-2 cursor-pointer font-bold text-slate-50 bg-violet-500 hover:bg-violet-600 rounded-lg sm:rounded-l-none transition-colors">Enviar</button>
+    <button class="px-8 py-2 cursor-pointer font-bold text-slate-50 bg-violet-500 hover:bg-violet-600 rounded-lg sm:rounded-l-none transition-colors"
+        >Enviar</button
+    >
 </form>
 
 <section class="mt-10">
@@ -42,4 +44,3 @@
         <ApiPetition url={urlPetition} />
     </div>
 </section>
-
