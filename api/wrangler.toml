@@ -8,10 +8,11 @@ binding = "DB"
 database_name = "drinks-api-db"
 database_id = "xxxx"
 
-# KV for rate limiting
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "xxxx"
+# Rate Limiting
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 15, period = 60 }
 
 [observability]
 [observability.logs]

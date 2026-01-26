@@ -1,5 +1,5 @@
 import { rateLimiter } from '@/middlewares/rateLimiter'
-import { D1Database, KVNamespace } from '@cloudflare/workers-types'
+import { D1Database, RateLimit } from '@cloudflare/workers-types'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { prettyJSON } from 'hono/pretty-json'
@@ -9,7 +9,7 @@ import publicRoutes from '@/routes/public/index'
 
 type Bindings = {
     DB: D1Database
-    RATE_LIMIT_KV: KVNamespace
+    RATE_LIMITER: RateLimit
     ADMIN_API_KEY: string
 }
 
@@ -31,14 +31,7 @@ app.use(
     })
 )
 
-app.use(
-    '*',
-    rateLimiter({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
-        monthlyMax: 1000, // limit each IP to 1000 requests per month
-    })
-)
+app.use('*', rateLimiter())
 
 // ============================= ENDPOINTS =============================
 
