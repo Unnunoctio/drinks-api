@@ -1,29 +1,3 @@
--- PRAGMA foreign_keys = OFF;
-
--- DROP TABLE IF EXISTS spirits;
--- DROP TABLE IF EXISTS spirit_aging_containers;
--- DROP TABLE IF EXISTS spirit_types;
-
--- DROP TABLE IF EXISTS wine_wine_vineyards;
--- DROP TABLE IF EXISTS wine_vineyards;
--- DROP TABLE IF EXISTS wine_wine_strains;
--- DROP TABLE IF EXISTS wine_strains;
--- DROP TABLE IF EXISTS wines;
--- DROP TABLE IF EXISTS wine_types;
-
--- DROP TABLE IF EXISTS beers;
--- DROP TABLE IF EXISTS beer_styles;
--- DROP TABLE IF EXISTS unique_beer_identities;
-
--- DROP TABLE IF EXISTS drink_formats;
--- DROP TABLE IF EXISTS drinks;
-
--- DROP TABLE IF EXISTS packaging;
--- DROP TABLE IF EXISTS categories;
--- DROP TABLE IF EXISTS brands;
--- DROP TABLE IF EXISTS origins;
--- DROP TABLE IF EXISTS countries;
-
 PRAGMA foreign_keys = ON;
 
 -- COUNTRIES
